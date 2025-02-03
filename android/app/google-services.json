@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "996781545162",
+    "project_id": "listenaryyy",
+    "storage_bucket": "listenaryyy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996781545162:android:997581cd4a374b48374633",
+        "android_client_info": {
+          "package_name": "com.example.listenary"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHPVoGNYIrbE1tnAowYH9srFay4VNiW6w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
