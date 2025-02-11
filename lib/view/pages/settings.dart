@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -12,7 +13,7 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  String name = "manal";
+  String name = "User";
   List<Map<String, String>> speakers = [
     {
       "profile": "assets/Images/male.png",
@@ -27,6 +28,19 @@ class _SettingsState extends State<Settings> {
   ];
   String selectedLanguage = "English";
   String selectedNotification = "On";
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserName();
+  }
+
+  void _getUserName() {
+    User? user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      name = user?.displayName ?? "User";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
