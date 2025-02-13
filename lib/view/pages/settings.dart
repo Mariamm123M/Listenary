@@ -6,7 +6,6 @@ import 'package:listenary/view/components/profile_image.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});

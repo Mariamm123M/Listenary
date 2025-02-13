@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:listenary/services/permissions/camera_permission.dart';
-import 'package:listenary/services/permissions/storage_permisson.dart';
 import 'package:listenary/view/components/awesome_dialog.dart';
 import 'package:listenary/view/components/profile_image.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,7 +19,6 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   String name = "User";
-  File? _imgFile;
   String? _imagePath;
   final ImagePicker _picker = ImagePicker();
   final FirebaseAuth _auth = FirebaseAuth.instance;
