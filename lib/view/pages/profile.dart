@@ -11,9 +11,7 @@ import 'package:listenary/view/components/awesome_dialog.dart';
 import 'package:listenary/view/components/profile_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-
 import '../../services/auth_service.dart';
-
 class Profile extends StatefulWidget {
   const Profile({super.key});
 

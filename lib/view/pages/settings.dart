@@ -4,6 +4,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/view/components/profile_image.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -14,6 +17,27 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   String name = "User";
+  String? profileImage;
+  String? _imagePath;
+
+  Future<void> _loadProfileImage() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final Directory userDir = Directory('${appDir.path}/images/$userId');
+
+    if (!userDir.existsSync()) return;
+
+    List<FileSystemEntity> files = userDir.listSync();
+    if (files.isNotEmpty) {
+      files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      setState(() {
+        _imagePath = files.first.path;
+      });
+    }
+  }
+
   List<Map<String, String>> speakers = [
     {
       "profile": "assets/Images/male.png",
@@ -32,13 +56,15 @@ class _SettingsState extends State<Settings> {
   @override
   void initState() {
     super.initState();
-    _getUserName();
+    _getUserData();
+    _loadProfileImage();
   }
 
-  void _getUserName() {
+  void _getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     setState(() {
       name = user?.displayName ?? "User";
+      profileImage = user?.photoURL;
     });
   }
 
@@ -118,6 +144,7 @@ class _SettingsState extends State<Settings> {
                         ProfileImage(
                             radius: 0.15,
                             screenWidth: screenWidth,
+                            imageFile: _imagePath, // Use the latest locally stored image
                             color: Color(0xff3C3C3C),
                             onTap: () {
                               //view user profile

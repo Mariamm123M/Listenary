@@ -10,6 +10,7 @@ import 'package:listenary/view/pages/settings.dart';
 import 'package:listenary/view/pages/signup.dart' as signup_page;
 import 'package:listenary/view/pages/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 void main() async {
  // debugPaintSizeEnabled = true;
   WidgetsFlutterBinding.ensureInitialized();

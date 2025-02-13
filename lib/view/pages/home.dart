@@ -7,6 +7,10 @@ import 'package:listenary/view/components/library_card.dart';
 import 'package:listenary/view/components/recently_card.dart';
 import 'package:listenary/view/pages/SearchPage.dart';
 import 'package:listenary/view/pages/profile.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../components/profile_image.dart';
 
 class Home extends StatefulWidget {
@@ -20,11 +24,32 @@ class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   String name = "User";
+  String? _imagePath;
+
+  Future<void> _loadProfileImage() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final Directory userDir = Directory('${appDir.path}/images/$userId');
+
+    if (!userDir.existsSync()) return;
+
+    List<FileSystemEntity> files = userDir.listSync();
+    if (files.isNotEmpty) {
+      files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      setState(() {
+        _imagePath = files.first.path;
+      });
+    }
+  }
+
 
   @override
   void initState() {
     super.initState();
     _getUserName();
+    _loadProfileImage(); // Load the profile image on startup
   }
 
   void _getUserName() {
@@ -198,7 +223,7 @@ class _HomeState extends State<Home> {
                   ProfileImage(
                     radius: 0.06,
                     screenWidth: screenHeight,
-                    imageFile: image,
+                    imageFile: _imagePath, // Updated image path
                     onTap: () {
                       scaffoldKey.currentState?.openDrawer();
                     },
