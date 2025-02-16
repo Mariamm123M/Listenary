@@ -6,6 +6,79 @@ import 'package:listenary/view/components/profile_image.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
+class UserSettings {
+  final String language; // "English" or "Arabic"
+  final bool notificationsEnabled;
+
+  UserSettings({
+    required this.language,
+    required this.notificationsEnabled,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'language': language,
+      'notificationsEnabled': notificationsEnabled,
+    };
+  }
+
+  factory UserSettings.fromMap(Map<String, dynamic> map) {
+    return UserSettings(
+      language: map['language'] ?? 'English',
+      notificationsEnabled: map['notificationsEnabled'] ?? true,
+    );
+  }
+}
+
+class FirestoreService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> saveUserSettings(UserSettings settings) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).set(
+        settings.toMap(),
+        SetOptions(merge: true),
+      );
+    }
+  }
+
+  Future<UserSettings?> getUserSettings() async {
+    User? user = _auth.currentUser;
+    if (user == null) return null;
+    DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+    if (doc.exists) {
+      return UserSettings.fromMap(doc.data() as Map<String, dynamic>);
+    }
+    return null;
+  }
+
+  Stream<UserSettings> userSettingsStream() {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      return Stream.value(UserSettings(language: 'English', notificationsEnabled: true));
+    }
+
+    return _firestore.collection('users').doc(user.uid).snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        return UserSettings.fromMap(snapshot.data() as Map<String, dynamic>);
+      }
+      return UserSettings(language: 'English', notificationsEnabled: true);
+    });
+  }
+
+  Future<void> updateUserSettings(UserSettings settings) async {
+    User? user = _auth.currentUser;
+    if (user == null) return;
+
+    await _firestore.collection('users').doc(user.uid).update(settings.toMap());
+  }
+}
+
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -15,9 +88,36 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirestoreService _firestoreService = FirestoreService();
+  User? _user;
   String name = "User";
   String? profileImage;
   String? _imagePath;
+  bool notificationsEnabled = true;
+  int selectedSpeaker = 0; // Default to 0
+
+
+  void _loadUserSettings() async {
+    UserSettings? settings = await _firestoreService.getUserSettings();
+    if (settings != null) {
+      setState(() {
+        selectedLanguage = settings.language;
+        notificationsEnabled = settings.notificationsEnabled;
+      });
+    }
+  }
+
+
+  Future<void> saveUserSettings() async {
+    final userSettings = UserSettings(
+      language: selectedLanguage,
+      notificationsEnabled: notificationsEnabled,
+    );
+    await _firestoreService.saveUserSettings(userSettings);
+  }
+
 
   Future<void> _loadProfileImage() async {
     String? userId = FirebaseAuth.instance.currentUser?.uid;
@@ -50,11 +150,15 @@ class _SettingsState extends State<Settings> {
     }
   ];
   String selectedLanguage = "English";
-  String selectedNotification = "On";
+
 
   @override
   void initState() {
     super.initState();
+    _user = _auth.currentUser;
+    if (_user != null) {
+      _loadUserSettings();
+    }
     _getUserData();
     _loadProfileImage();
   }
@@ -66,6 +170,7 @@ class _SettingsState extends State<Settings> {
       profileImage = user?.photoURL;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -193,6 +298,7 @@ class _SettingsState extends State<Settings> {
                                         setState(() {
                                           selectedLanguage = category;
                                         });
+                                        saveUserSettings();
                                       }),
                                   buildCustomRadioButton(
                                       screenHeight: screenHeight,
@@ -204,6 +310,7 @@ class _SettingsState extends State<Settings> {
                                         setState(() {
                                           selectedLanguage = category;
                                         });
+                                        saveUserSettings();
                                       })
                                 ],
                               )
@@ -222,24 +329,27 @@ class _SettingsState extends State<Settings> {
                               buildCustomRadioButton(
                                   screenHeight: screenHeight,
                                   screenWidth: screenWidth,
-                                  selectedCategory: selectedNotification,
+                                  selectedCategory: notificationsEnabled ? "On" : "Off"
+                        ,
                                   category: "On",
                                   onSelect: (category) {
                                     //save the value of the notification to on
                                     setState(() {
-                                      selectedNotification = category;
+                                      notificationsEnabled = category == "On";
                                     });
+                                    saveUserSettings();
                                   }),
                               buildCustomRadioButton(
                                   screenHeight: screenHeight,
                                   screenWidth: screenWidth,
                                   category: "Off",
-                                  selectedCategory: selectedNotification,
+                                  selectedCategory: notificationsEnabled ? "On" : "Off",
                                   onSelect: (category) {
                                     //save the value of the notification to on
                                     setState(() {
-                                      selectedNotification = category;
+                                      notificationsEnabled = category == "On";
                                     });
+                                    saveUserSettings();
                                   })
                             ],
                           )
@@ -358,19 +468,31 @@ class _SpeakersState extends State<Speakers> {
   Future<void> _playPauseAudio(String localFilePath, int index) async {
     if (playedVoice == index && isPlaying) {
       await player.pause();
-      print("audio paused");
       setState(() {
         isPlaying = false;
-        print("isplaying == false");
       });
     } else {
       await player.play(AssetSource(localFilePath));
-      print("audio played");
       setState(() {
         playedVoice = index;
         isPlaying = true;
-        print("isplaying == true");
       });
+    }
+  }
+
+  // Function to save the selected speaker in Firebase
+  Future<void> saveSelectedSpeaker(int index) async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      String selectedVoice = widget.speakers[index]["name"] ?? "Voice1";
+
+      await FirebaseFirestore.instance.collection("users").doc(userId).update({
+        "selectedSpeaker": selectedVoice,
+      });
+
+      print("Speaker selection saved: $selectedVoice");
+    } catch (error) {
+      print("Error saving speaker: $error");
     }
   }
 
@@ -379,34 +501,33 @@ class _SpeakersState extends State<Speakers> {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
+
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: screenHeight * 0.16, maxWidth: screenWidth * 0.5),
       child: ListView.separated(
         physics: NeverScrollableScrollPhysics(),
         itemCount: widget.speakers.length,
         separatorBuilder: (BuildContext context, int index) {
-          return SizedBox(height: screenHeight * 0.01,);
+          return SizedBox(height: screenHeight * 0.01);
         },
         itemBuilder: (BuildContext context, int index) {
           return InkWell(
-            onTap: () {
+            onTap: () async {
               setState(() {
                 selectedSpeaker = index;
               });
+              await saveSelectedSpeaker(index); // Save selection in Firebase
             },
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
                   width: 2,
-                  color: selectedSpeaker == index
-                      ? Color(0xff212E54)
-                      : Color(0xff9B9B9B),
+                  color: selectedSpeaker == index ? Color(0xff212E54) : Color(0xff9B9B9B),
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
               child: Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: screenWidth * 0.025, vertical: screenHeight * 0.0002),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.025, vertical: screenHeight * 0.0002),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -421,9 +542,7 @@ class _SpeakersState extends State<Speakers> {
                         Text(
                           widget.speakers[index]["name"]!,
                           style: TextStyle(
-                            color: selectedSpeaker == index
-                                ? Color(0xff212E54)
-                                : Color(0xff3C3C3C),
+                            color: selectedSpeaker == index ? Color(0xff212E54) : Color(0xff3C3C3C),
                             fontSize: screenWidth * 0.03,
                             fontWeight: FontWeight.w500,
                           ),
@@ -433,13 +552,10 @@ class _SpeakersState extends State<Speakers> {
                     SvgPicture.asset("assets/Icons/voice.svg"),
                     IconButton(
                       onPressed: () async {
-                        await _playPauseAudio(
-                            widget.speakers[index]["voice"]!, index);
+                        await _playPauseAudio(widget.speakers[index]["voice"]!, index);
                       },
                       icon: Icon(
-                        playedVoice == index && isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow,
+                        playedVoice == index && isPlaying ? Icons.pause : Icons.play_arrow,
                         size: screenWidth * 0.08,
                         color: Color(0xff212E54),
                       ),
@@ -454,3 +570,4 @@ class _SpeakersState extends State<Speakers> {
     );
   }
 }
+
