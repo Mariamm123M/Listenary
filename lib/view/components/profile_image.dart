@@ -35,8 +35,8 @@ class ProfileImage extends StatelessWidget {
           else
             SvgPicture.asset(
               "assets/Icons/username.svg",
-              height: radius! * screenWidth, // Adjust based on radius for consistency
-              width: radius! * screenWidth,
+              height: radius * screenWidth, // Adjust based on radius for consistency
+              width: radius * screenWidth,
               color: color, // Color for the SVG icon
             ),
           
