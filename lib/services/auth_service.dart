@@ -19,14 +19,18 @@ class AuthService {
   }
 
   // Sign up with Email & Password
-  Future<void> signUpWithEmail(String email, String password, BuildContext context) async {
+  Future<void> signUpWithEmail(String email, String password, String name, BuildContext context) async {
     try {
-      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+
+      await userCredential.user!.updateDisplayName(name); // Set display name
+
       Get.offAll(() => const Home());
     } on FirebaseAuthException catch (e) {
       _showErrorDialog(context, e.message ?? "An error occurred");
     }
   }
+
 
   // Sign in with Google
   Future<void> signInWithGoogle(BuildContext context) async {
@@ -35,8 +39,8 @@ class AuthService {
       if (googleUser == null) return;
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
       );
       await _auth.signInWithCredential(credential);
       Get.offAll(() => const Home());

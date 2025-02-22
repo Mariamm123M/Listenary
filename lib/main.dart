@@ -4,12 +4,13 @@ import 'package:listenary/controller/favorites_books_controller.dart';
 import 'package:listenary/controller/recent_books_controller.dart';
 import 'package:listenary/view/pages/help_center.dart';
 import 'package:listenary/view/pages/home.dart';
-import 'package:listenary/view/pages/login.dart';
+import 'package:listenary/view/pages/login.dart' as login_page;
 import 'package:listenary/view/pages/profile.dart';
 import 'package:listenary/view/pages/settings.dart';
-import 'package:listenary/view/pages/signup.dart';
+import 'package:listenary/view/pages/signup.dart' as signup_page;
 import 'package:listenary/view/pages/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 void main() async {
  // debugPaintSizeEnabled = true;
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,8 +62,8 @@ class MyApp extends StatelessWidget {
       //initialRoute: "/signup",
       getPages: [
         GetPage(name: "/", page: () => const SplashScreen()),
-        GetPage(name: "/login", page: () => const Login()),
-        GetPage(name: "/signup", page: () => const SignUp()),
+        GetPage(name: "/login", page: () => const login_page.Login()),
+        GetPage(name: "/signup", page: () => const signup_page.SignUp()),
         GetPage(name: "/home", page: () =>  Home()),
         GetPage(name: "/profile", page: () =>  Profile()),
         GetPage(name: "/help", page: () =>  const HelpCenter()),

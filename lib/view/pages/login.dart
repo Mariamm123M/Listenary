@@ -1,7 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:listenary/view/components/bottom_navigation_bar.dart';
+import 'package:listenary/services/auth_service.dart';
 import 'package:listenary/view/components/custom_textformfield.dart';
 
 class Login extends StatefulWidget {
@@ -12,10 +11,10 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  var formKey = GlobalKey<FormState>();
-
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   bool isObsecure = true;
 
@@ -27,8 +26,8 @@ class _LoginState extends State<Login> {
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.symmetric(
-          vertical: screenHeight * 0.06, // 6% of screen height
-          horizontal: screenWidth * 0.06, // 6% of screen width
+          vertical: screenHeight * 0.06,
+          horizontal: screenWidth * 0.06,
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -135,35 +134,11 @@ class _LoginState extends State<Login> {
                     ElevatedButton(
                       onPressed: () async {
                         if (formKey.currentState!.validate()) {
-                          try {
-                            await FirebaseAuth.instance.signInWithEmailAndPassword(
-                              email: emailController.text,
-                              password: passwordController.text,
-                            );
-                            Get.offAll(() => const BottomNavBarScreen());
-                            Navigator.of(context).pushReplacementNamed("home");
-                          } on FirebaseAuthException catch (e) {
-                            if (e.code == 'user-not-found') {
-                              // Custom message for when the user doesn't exist
-                              Get.snackbar(
-                                "Account Not Found",
-                                "This account does not exist, please sign up.",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.red,
-                                colorText: Colors.white,
-                                duration: Duration(seconds: 3),
-                              );
-                            } else if (e.code == 'wrong-password') {
-                              Get.snackbar(
-                                "Incorrect Password",
-                                "Incorrect password. Please try again.",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.red,
-                                colorText: Colors.white,
-                                duration: Duration(seconds: 3),
-                              );
-                            }
-                          }
+                          await _authService.signInWithEmail(
+                            emailController.text,
+                            passwordController.text,
+                            context,
+                          );
                         }
                       },
                       child: const Text(
@@ -187,8 +162,8 @@ class _LoginState extends State<Login> {
 
                     // Google Sign-In
                     GestureDetector(
-                      onTap: () {
-                        // Implement Google Sign-In
+                      onTap: () async {
+                        await _authService.signInWithGoogle(context);
                       },
                       child: Image.asset(
                         "assets/Icons/googl_icon.png",
