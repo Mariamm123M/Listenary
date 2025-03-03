@@ -5,6 +5,8 @@ import 'package:listenary/view/components/custom_textformfield.dart';
 import 'package:listenary/view/pages/login.dart' as login_page;
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../components/bottom_navigation_bar.dart';
+
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
 
@@ -178,6 +180,7 @@ class _SignUpState extends State<SignUp> {
                               nameController.text,
                               context,
                             );
+                            Get.offAll(() => const BottomNavBarScreen());
                           } on FirebaseAuthException catch (e) {
                             if (e.code == 'email-already-in-use') {
                               _showErrorDialog(context, "This email is already in use. Please log in.");
@@ -197,7 +200,12 @@ class _SignUpState extends State<SignUp> {
 
                     GestureDetector(
                       onTap: () async {
-                        await _authService.signInWithGoogle(context);
+                        bool success = await _authService.signInWithGoogle();
+                        if (success) {
+                          Get.offAll(() => const BottomNavBarScreen());
+                        } else {
+                          _showErrorDialog(context, "Google Sign-In failed. Please try again.");
+                        }
                       },
                       child: Image.asset(
                         "assets/Icons/googl_icon.png",
