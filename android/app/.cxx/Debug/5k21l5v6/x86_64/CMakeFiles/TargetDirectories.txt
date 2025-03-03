@@ -1,0 +1,2 @@
+C:/Users/HP/StudioProjects/listenary/android/app/.cxx/Debug/5k21l5v6/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/HP/StudioProjects/listenary/android/app/.cxx/Debug/5k21l5v6/x86_64/CMakeFiles/rebuild_cache.dir

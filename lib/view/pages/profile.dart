@@ -4,12 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:listenary/view/components/awesome_dialog.dart';
 import 'package:listenary/view/components/profile_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../services/auth_service.dart';
+
 class Profile extends StatefulWidget {
   final VoidCallback? onClose;
   const Profile({super.key, this.onClose});
@@ -51,7 +53,8 @@ class _ProfileState extends State<Profile> {
 
     List<FileSystemEntity> files = userDir.listSync();
     if (files.isNotEmpty) {
-      files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      files.sort(
+          (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
       setState(() {
         _imagePath = files.first.path;
       });
@@ -69,7 +72,8 @@ class _ProfileState extends State<Profile> {
       userDir.createSync(recursive: true);
     }
 
-    final String newPath = '${userDir.path}/${DateTime.now().millisecondsSinceEpoch}.png';
+    final String newPath =
+        '${userDir.path}/${DateTime.now().millisecondsSinceEpoch}.png';
     final File newImage = await imageFile.copy(newPath);
 
     setState(() {
@@ -77,16 +81,56 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  Future<void> _takePhoto(ImageSource source) async {
-    final XFile? image = await _picker.pickImage(source: source);
+Future<void> _takePhoto(ImageSource source) async {
+  print("Taking photo...");
+  final XFile? image = await _picker.pickImage(source: source, maxHeight: 700,maxWidth: 700);
 
-    if (image != null) {
-      File imageFile = File(image.path);
-      await _saveProfileImage(imageFile);
+  if (image != null) {
+    print("Image picked: ${image.path}");
+    File imageFile = File(image.path);
+
+    // Crop the image
+    print("Cropping image...");
+    try {
+      CroppedFile? cropped = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressQuality: 100,
+        maxHeight: 700,
+        maxWidth: 700,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Image profile cropping',
+            backgroundColor: const Color(0xff212E54),
+            toolbarColor: const Color(0xff212E54),
+            toolbarWidgetColor: Colors.white,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+            ],
+          ),
+        ],
+      );
+
+      if (cropped != null) {
+        print("Image cropped: ${cropped.path}");
+        File croppedImageFile = File(cropped.path);
+        await _saveProfileImage(croppedImageFile);
+        setState(() {
+          _imagePath = croppedImageFile.path;
+        });
+      } else {
+        print("Cropping canceled or failed");
+        await _saveProfileImage(imageFile);
+      }
+    } catch (e) {
+      print("Error cropping image: $e");
     }
-
-    Navigator.pop(context);
+  } else {
+    print("No image selected");
   }
+
+  Get.back();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +146,7 @@ class _ProfileState extends State<Profile> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProfileImage(
-              radius: 0.44,
+              radius: 0.25,
               screenWidth: screenWidth,
               imageFile: _imagePath, // Load saved image
               color: const Color(0xff949494),
@@ -234,9 +278,7 @@ class _ProfileState extends State<Profile> {
           const Text(
             "Choose option to change profile photo",
             style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700),
+                color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 1),
           Row(
@@ -245,7 +287,8 @@ class _ProfileState extends State<Profile> {
                 child: ListTile(
                   title: const Text("Camera",
                       style: TextStyle(color: Colors.white, fontSize: 14)),
-                  leading: const Icon(Icons.camera, color: Colors.white, size: 30),
+                  leading:
+                      const Icon(Icons.camera, color: Colors.white, size: 30),
                   onTap: () async {
                     _takePhoto(ImageSource.camera);
                   },
@@ -264,6 +307,16 @@ class _ProfileState extends State<Profile> {
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Expanded(
+                child: ListTile(
+                  title: const Text("Delete Profile Image",
+                      style: TextStyle(color: Colors.white, fontSize: 14)),
+                  leading: Icon(Icons.delete, color: Colors.white,size: 30,),
+                  onTap: () {
+                  },
+                ),
+              ),
         ],
       ),
     );
