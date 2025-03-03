@@ -11,7 +11,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../services/auth_service.dart';
 class Profile extends StatefulWidget {
-  const Profile({super.key});
+  final VoidCallback? onClose;
+  const Profile({super.key, this.onClose});
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -131,7 +132,7 @@ class _ProfileState extends State<Profile> {
                 ],
               ),
             ),
-            SizedBox(height: screenHeight * 0.01),
+            SizedBox(height: 2),
             Text(
               name.capitalize!,
               style: TextStyle(
@@ -139,7 +140,7 @@ class _ProfileState extends State<Profile> {
                   fontSize: screenWidth * 0.045,
                   fontWeight: FontWeight.w800),
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: 5),
             const Divider(color: Color(0xff3C3C3C), thickness: 1),
             SizedBox(height: screenHeight * 0.015),
             line(
@@ -151,7 +152,7 @@ class _ProfileState extends State<Profile> {
                 Get.toNamed("settings");
               },
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: 5),
             line(
               screenHeight: screenHeight,
               screenWidth: screenWidth,
@@ -161,7 +162,7 @@ class _ProfileState extends State<Profile> {
                 Get.toNamed("help");
               },
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: 3),
             line(
               screenHeight: screenHeight,
               screenWidth: screenWidth,
@@ -171,7 +172,7 @@ class _ProfileState extends State<Profile> {
                 Share.share('Download my app here: $downloadLink');
               },
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: 3),
             line(
               screenHeight: screenHeight,
               screenWidth: screenWidth,
@@ -237,7 +238,7 @@ class _ProfileState extends State<Profile> {
                 fontSize: 16,
                 fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 1),
           Row(
             children: [
               Expanded(

@@ -1,3 +1,4 @@
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,18 +15,18 @@ class _UploadFileState extends State<UploadFile> {
   String? pickedFilePath;
 
   Future<void> pickDocument() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles();
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
 
-  if (result != null) {
-    setState(() {
-      pickedFilePath = result.files.single.path; // Get the file path
-    });
-  } else {
-    setState(() {
-      pickedFilePath = null; // Handle case when no file is picked
-    });
+    if (result != null) {
+      setState(() {
+        pickedFilePath = result.files.single.path; // Get the file path
+      });
+    } else {
+      setState(() {
+        pickedFilePath = null; // Handle case when no file is picked
+      });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {

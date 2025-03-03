@@ -139,12 +139,12 @@ class _SettingsState extends State<Settings> {
 
   List<Map<String, String>> speakers = [
     {
-      "profile": "assets/Images/male.png",
+      "profile": "assets/Images/male.jpg",
       "name": "mark",
       "voice": "audio/male.mp3"
     },
     {
-      "profile": "assets/Images/female.png",
+      "profile": "assets/Images/female.jpeg",
       "name": "Leila",
       "voice": "audio/feamle.mp3"
     }
@@ -286,7 +286,7 @@ class _SettingsState extends State<Settings> {
                             children: [
                               Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
+                                MainAxisAlignment.spaceAround,
                                 children: [
                                   buildCustomRadioButton(
                                       screenHeight: screenHeight,
@@ -330,7 +330,7 @@ class _SettingsState extends State<Settings> {
                                   screenHeight: screenHeight,
                                   screenWidth: screenWidth,
                                   selectedCategory: notificationsEnabled ? "On" : "Off"
-                        ,
+                                  ,
                                   category: "On",
                                   onSelect: (category) {
                                     //save the value of the notification to on
@@ -366,11 +366,11 @@ class _SettingsState extends State<Settings> {
 
   Theme feature(BuildContext context,
       {required double screenWidth,
-      String? image = "",
-      IconData? icon,
-      required String text,
-      required List<Widget> children,
-      required double fontSize}) {
+        String? image = "",
+        IconData? icon,
+        required String text,
+        required List<Widget> children,
+        required double fontSize}) {
     return Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent, // Removes the divider between items
@@ -380,12 +380,12 @@ class _SettingsState extends State<Settings> {
         child: ExpansionTile(
           leading: icon == null
               ? image!.isNotEmpty
-                  ? Image.asset(image)
-                  : null
+              ? Image.asset(image)
+              : null
               : Icon(
-                  icon,
-                  color: Color(0xff3C3C3C),
-                ),
+            icon,
+            color: Color(0xff3C3C3C),
+          ),
           showTrailingIcon: false,
           title: Text(
             text,
@@ -414,19 +414,19 @@ class _SettingsState extends State<Settings> {
         children: [
           selectedCategory == category
               ? SvgPicture.asset("assets/Icons/checked.svg",
-                  color: Color(0xff212E54),
-                  height: screenHeight * 0.025,
-                  width: screenWidth * 0.015)
+              color: Color(0xff212E54),
+              height: screenHeight * 0.025,
+              width: screenWidth * 0.015)
               : Container(
-                  width: screenHeight * 0.06,
-                  height: screenWidth * 0.05,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Color(0xff212E54),
-                      width: 2,
-                    ),
-                  )),
+              width: screenHeight * 0.06,
+              height: screenWidth * 0.05,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Color(0xff212E54),
+                  width: 2,
+                ),
+              )),
           SizedBox(width: screenWidth * 0.025),
           Text(
             category,
@@ -570,4 +570,3 @@ class _SpeakersState extends State<Speakers> {
     );
   }
 }
-

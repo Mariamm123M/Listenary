@@ -11,8 +11,8 @@ class UploadText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  double screenWidth = MediaQuery.of(context).size.width;
-  double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -54,10 +54,10 @@ class UploadText extends StatelessWidget {
                   controller: text,
                   maxLines: 10,
                   style: TextStyle(
-                    color: Colors.black, 
-                    fontSize: 18.0, 
-                    fontWeight: FontWeight.bold, 
-                    fontFamily: 'Inter'
+                      color: Colors.black,
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter'
                   ),
                   decoration: InputDecoration(
                     hintText: "Enter Text",
@@ -66,20 +66,20 @@ class UploadText extends StatelessWidget {
                         fontSize: screenWidth * 0.03,
                         fontWeight: FontWeight.w600, fontFamily: 'Inter'),
                     errorStyle:
-                        TextStyle(fontSize: screenWidth * 0.03, fontWeight: FontWeight.w400, fontFamily: 'Inter'),
+                    TextStyle(fontSize: screenWidth * 0.03, fontWeight: FontWeight.w400, fontFamily: 'Inter'),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 24),
                     enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         borderSide:
-                            BorderSide(width: 1, color: Color(0xff949494))),
+                        BorderSide(width: 1, color: Color(0xff949494))),
                     errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(color: Colors.red)),
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         borderSide:
-                            BorderSide(width: 2, color: Color(0xff949494))),
+                        BorderSide(width: 2, color: Color(0xff949494))),
                     focusedErrorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(color: Colors.red)),

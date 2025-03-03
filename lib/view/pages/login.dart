@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:listenary/services/auth_service.dart';
 import 'package:listenary/view/components/custom_textformfield.dart';
 
+import '../components/bottom_navigation_bar.dart';
+
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -139,6 +141,7 @@ class _LoginState extends State<Login> {
                             passwordController.text,
                             context,
                           );
+                          Get.offAll(() => const BottomNavBarScreen());
                         }
                       },
                       child: const Text(
@@ -163,7 +166,10 @@ class _LoginState extends State<Login> {
                     // Google Sign-In
                     GestureDetector(
                       onTap: () async {
-                        await _authService.signInWithGoogle(context);
+                        bool success = await _authService.signInWithGoogle();
+                        if (success) {
+                          Get.offAll(() => const BottomNavBarScreen()); // Navigate after Google sign-in
+                        }
                       },
                       child: Image.asset(
                         "assets/Icons/googl_icon.png",
