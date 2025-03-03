@@ -33,19 +33,21 @@ class AuthService {
 
 
   // Sign in with Google
-  Future<void> signInWithGoogle(BuildContext context) async {
+  Future<bool> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) return false; // User canceled sign-in
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
       await _auth.signInWithCredential(credential);
-      Get.offAll(() => const Home());
+      return true; // Success
     } catch (e) {
-      _showErrorDialog(context, "Google sign-in failed");
+      print("Google Sign-In Error: $e");
+      return false; // Failed sign-in
     }
   }
 //.......
