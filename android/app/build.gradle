@@ -10,7 +10,7 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace = "com.example.listenary"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "25.1.8937393"
 
     compileOptions {

@@ -9,7 +9,6 @@ import 'package:listenary/view/pages/SearchPage.dart';
 import 'package:listenary/view/pages/profile.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import '../components/profile_image.dart';
 

@@ -39,8 +39,8 @@ class AuthService {
       if (googleUser == null) return;
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
       await _auth.signInWithCredential(credential);
       Get.offAll(() => const Home());
