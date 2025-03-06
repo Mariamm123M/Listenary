@@ -460,7 +460,6 @@ Future<void> seekToPosition(int position) async {
       });
     }
   }
-
   void skipBackward() async {
     final currentPosition = await _audioPlayer.getCurrentPosition();
     if (currentPosition != null) {
