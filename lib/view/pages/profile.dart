@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:listenary/services/permissions/storage_permisson.dart';
 import 'package:listenary/view/components/awesome_dialog.dart';
 import 'package:listenary/view/components/profile_image.dart';
 import 'package:share_plus/share_plus.dart';
@@ -82,7 +83,8 @@ class _ProfileState extends State<Profile> {
   }
 
 Future<void> _takePhoto(ImageSource source) async {
-  print("Taking photo...");
+  if(await checkStoragePermission()){
+    print("Taking photo...");
   final XFile? image = await _picker.pickImage(source: source, maxHeight: 700,maxWidth: 700);
 
   if (image != null) {
@@ -130,6 +132,10 @@ Future<void> _takePhoto(ImageSource source) async {
   }
 
   Get.back();
+  }
+  else {
+    print("Storage permission denied");
+  }
 }
 
   @override
