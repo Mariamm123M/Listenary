@@ -1,0 +1,43 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+
+android {
+    namespace = "com.example.listenary"
+    compileSdk = 35
+    ndkVersion = "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"  // Fix jvmTarget syntax
+    }
+
+    defaultConfig {
+        applicationId = "com.example.listenary"
+        minSdk = 23
+        targetSdk = 34  // Set the target SDK directly
+        versionCode = 1  // Replace with flutter.versionCode if using Flutter versioning
+        versionName = "1.0"  // Replace with flutter.versionName if using Flutter versioning
+    }
+
+    buildTypes {
+        release {
+            // Add your own signing config for release
+            signingConfig = signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source = "../.."  // Path to Flutter module
+}

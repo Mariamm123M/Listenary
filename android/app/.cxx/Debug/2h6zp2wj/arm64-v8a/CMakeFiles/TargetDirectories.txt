@@ -1,0 +1,2 @@
+C:/flutter/Listenary-master/android/app/.cxx/Debug/2h6zp2wj/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/flutter/Listenary-master/android/app/.cxx/Debug/2h6zp2wj/arm64-v8a/CMakeFiles/rebuild_cache.dir
