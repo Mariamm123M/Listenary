@@ -23,11 +23,28 @@ class _UploadTextState extends State<UploadText> {
   final textKey = GlobalKey<FormState>();
   final TextEditingController textController = TextEditingController();
   String uploadedText = "";
+  String? selectedSpeaker;
 
   @override
   void initState() {
     super.initState();
     fetchUserText();
+    loadSelectedSpeaker();
+  }
+
+  Future<void> loadSelectedSpeaker() async {
+    try {
+      String userId = _auth.currentUser!.uid;
+      DocumentSnapshot doc = await _firestore.collection('users').doc(userId).get();
+
+      if (doc.exists) {
+        setState(() {
+          selectedSpeaker = doc['selectedSpeaker'] ?? "mark"; // Default to "mark" if not set
+        });
+      }
+    } catch (error) {
+      print("Error loading selected speaker: $error");
+    }
   }
 
   Future<void> uploadText() async {
@@ -74,7 +91,10 @@ class _UploadTextState extends State<UploadText> {
       final response = await http.post(
         Uri.parse(ttsServerUrl),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'text': text}),
+        body: json.encode({
+          'text': text,
+          'gender': selectedSpeaker == "Leila" ? "female" : "male",
+        }),
       );
 
       print("Server Response: ${response.statusCode}");

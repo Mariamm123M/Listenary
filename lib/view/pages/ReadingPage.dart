@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -34,8 +36,7 @@ class _ReadingPageState extends State<ReadingPage> {
   String summarizedText = '';
   String originalText = '';
   bool isSummarized = false;
-
-bool isPlaying = false;
+  bool isPlaying = false;
   bool isPaused = false;
   double playbackSpeed = 1.0;
   double _progress = 0.0;
@@ -51,11 +52,14 @@ bool isPlaying = false;
   List<double> speeds = [1.0, 1.25, 1.5, 2.0];
   int currentSpeedIndex = 0;
   double _sliderValue = 0.0; // Separate variable for slider value
+  String? selectedSpeaker;
 
 
+  @override
   void initState() {
     super.initState();
     loadVoicePreference();
+    loadSelectedSpeaker();
     // Split the book content into sentences
     _sentences = widget.book.bookcontent.split(RegExp(r'(?<=[.!?])\s*'));
 
@@ -96,6 +100,21 @@ bool isPlaying = false;
           ? 'assets/Images/male.jpg'
           : 'assets/Images/female.jpeg'; // Update image path
     });
+  }
+
+  Future<void> loadSelectedSpeaker() async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      DocumentSnapshot doc = await FirebaseFirestore.instance.collection("users").doc(userId).get();
+
+      if (doc.exists) {
+        setState(() {
+          selectedSpeaker = doc["selectedSpeaker"] ?? "mark"; // Default to "mark" if not set
+        });
+      }
+    } catch (error) {
+      print("Error loading selected speaker: $error");
+    }
   }
 
   void toggleVoice() async {
@@ -170,8 +189,7 @@ bool isPlaying = false;
         _sentences = widget.book.bookcontent.split(RegExp(r'(?<=[.!?])\s*'));
 
         // Generate a unique filename based on the text
-        var textHash =
-            text.hashCode; // You can use a more robust hash function if needed
+        var textHash = text.hashCode; // You can use a more robust hash function if needed
         var tempDir = await getTemporaryDirectory();
         File file = File('${tempDir.path}/speech_$textHash.mp3');
 
@@ -180,8 +198,7 @@ bool isPlaying = false;
             .post(
               Uri.parse('http://192.168.1.7:5002/tts'),
               headers: {'Content-Type': 'application/json'},
-              body:
-                  '{"text": "$text", "gender": "${isMale ? "male" : "female"}"}',
+              body: '{"text": "$text", "gender": "${selectedSpeaker == "Leila" ? "female" : "male"}"}',
             )
             .timeout(Duration(seconds: 60));
 
@@ -665,7 +682,7 @@ Future<void> seekToPosition(int position) async {
                     onSkipForward: skipForward,
                     onChangeSpeed: changeSpeed,
                     onToggleVoice: toggleVoice,
-                    imagePath: imagePath,
+                    imagePath: selectedSpeaker == "Leila" ? 'assets/Images/female.jpeg' : 'assets/Images/male.jpg',
                     playbackSpeed: playbackSpeed,
                     slider: SliderAndTime(
                       isDarkMode: _isDarkMode,
