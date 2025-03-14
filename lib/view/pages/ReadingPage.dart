@@ -92,7 +92,7 @@ class _ReadingPageState extends State<ReadingPage> {
       _audioPlayer.seek(Duration.zero);
     });
   }
-   Future<void> loadVoicePreference() async {
+  Future<void> loadVoicePreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       isMale = prefs.getBool('isMaleVoice') ?? true; // Default to male
@@ -161,7 +161,7 @@ class _ReadingPageState extends State<ReadingPage> {
     } else {
       // Return the remaining text from the current position
       String remainingText =
-          _sentences.sublist(_currentSentenceIndex).join(' ');
+      _sentences.sublist(_currentSentenceIndex).join(' ');
       //print('Current Sentence Index: $_currentSentenceIndex');
       //print('Remaining Text: $remainingText');
       return remainingText;
@@ -196,10 +196,10 @@ class _ReadingPageState extends State<ReadingPage> {
         // Always regenerate the audio file for the new text
         var response = await http
             .post(
-              Uri.parse('http://192.168.1.7:5002/tts'),
-              headers: {'Content-Type': 'application/json'},
-              body: '{"text": "$text", "gender": "${selectedSpeaker == "Leila" ? "female" : "male"}"}',
-            )
+          Uri.parse('http://192.168.1.7:5002/tts'),
+          headers: {'Content-Type': 'application/json'},
+          body: '{"text": "$text", "gender": "${selectedSpeaker == "Leila" ? "female" : "male"}"}',
+        )
             .timeout(Duration(seconds: 60));
 
         if (response.statusCode == 200) {
@@ -409,7 +409,7 @@ class _ReadingPageState extends State<ReadingPage> {
     _progressTimer?.cancel();
     super.dispose();
   }
-Future<void> seekToPosition(int position) async {
+  Future<void> seekToPosition(int position) async {
     try {
       await _audioPlayer.seek(Duration(milliseconds: position));
     } on TimeoutException {
@@ -501,7 +501,7 @@ Future<void> seekToPosition(int position) async {
   FontWeight selectedFontWeight = FontWeight.w700;
   TextDecoration selectedFontDecoration = TextDecoration.none;
   FontStyle selectedFontStyle = FontStyle.normal;
-  
+
   @override
   Widget build(BuildContext context) {
     Color backgroundColor = _isDarkMode ? Color(0xFF212E54) : Colors.white;
@@ -592,7 +592,7 @@ Future<void> seekToPosition(int position) async {
           IconButton(
             icon: Image.asset('assets/Icons/notes.png', width: 24, height: 24),
             onPressed: () {
-             showFontMenu(context, (value) {
+              showFontMenu(context, (value) {
                 setState(() {
                   if (value == 'Bold') {
                     selectedFontWeight = (selectedFontWeight == FontWeight.bold)
@@ -600,9 +600,9 @@ Future<void> seekToPosition(int position) async {
                         : FontWeight.bold;
                   } else if (value == 'Underline') {
                     selectedFontDecoration =
-                        (selectedFontDecoration == TextDecoration.underline)
-                            ? TextDecoration.none
-                            : TextDecoration.underline;
+                    (selectedFontDecoration == TextDecoration.underline)
+                        ? TextDecoration.none
+                        : TextDecoration.underline;
                   } else if (value == 'Italic') {
                     selectedFontStyle = (selectedFontStyle == FontStyle.italic)
                         ? FontStyle.normal
@@ -655,26 +655,26 @@ Future<void> seekToPosition(int position) async {
       ),
       body: GestureDetector(
           child: Stack(
-        children: [
-          Container(
-            color: _isDarkMode ? Color(0xFF212E54) : Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: TextDisplay(
-              currentSentenceIndex: _currentSentenceIndex,
-              sentences: _sentences,
-              selectedFontDecoration: selectedFontDecoration,
-              selectedFontFamily: selectedFontFamily,
-              selectedFontStyle: selectedFontStyle,
-              selectedFontWeight: selectedFontWeight,
-            ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Opacity(
-              opacity: 1,
-              child: PlayerControllers(
+            children: [
+              Container(
+                color: _isDarkMode ? Color(0xFF212E54) : Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: TextDisplay(
+                    currentSentenceIndex: _currentSentenceIndex,
+                    sentences: _sentences,
+                    selectedFontDecoration: selectedFontDecoration,
+                    selectedFontFamily: selectedFontFamily,
+                    selectedFontStyle: selectedFontStyle,
+                    selectedFontWeight: selectedFontWeight,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Opacity(
+                  opacity: 1,
+                  child: PlayerControllers(
                     isDarkMode: _isDarkMode,
                     isPlaying: isPlaying,
                     onPlayPause: playPauseAudio,
@@ -693,10 +693,10 @@ Future<void> seekToPosition(int position) async {
                       screenWidth: screenWidth,
                     ), isSwitchingVoice: isSwitchingVoice,
                   ),
-            ),
-          )
-        ],
-      )),
+                ),
+              )
+            ],
+          )),
     );
   }
 }

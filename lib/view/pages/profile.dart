@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:listenary/services/permissions/camera_permission.dart';
 import 'package:listenary/services/permissions/storage_permisson.dart';
 import 'package:listenary/view/components/awesome_dialog.dart';
 import 'package:listenary/view/components/profile_image.dart';
@@ -54,8 +55,7 @@ class _ProfileState extends State<Profile> {
 
     List<FileSystemEntity> files = userDir.listSync();
     if (files.isNotEmpty) {
-      files.sort(
-          (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
       setState(() {
         _imagePath = files.first.path;
       });
@@ -73,8 +73,7 @@ class _ProfileState extends State<Profile> {
       userDir.createSync(recursive: true);
     }
 
-    final String newPath =
-        '${userDir.path}/${DateTime.now().millisecondsSinceEpoch}.png';
+    final String newPath = '${userDir.path}/${DateTime.now().millisecondsSinceEpoch}.png';
     final File newImage = await imageFile.copy(newPath);
 
     setState(() {
@@ -82,20 +81,36 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-Future<void> _takePhoto(ImageSource source) async {
-  if(await checkStoragePermission()){
-    print("Taking photo...");
-  final XFile? image = await _picker.pickImage(source: source, maxHeight: 700,maxWidth: 700);
+  Future<void> pickImageFromGallery() async {
+    bool hasPermission = await checkStoragePermission();
+    if (!hasPermission) {
+      Get.snackbar("Error", "Storage permission denied");
+      return;
+    }
 
-  if (image != null) {
-    print("Image picked: ${image.path}");
-    File imageFile = File(image.path);
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      await _processImage(File(image.path));
+    }
+  }
 
-    // Crop the image
-    print("Cropping image...");
+  Future<void> _takePhotoWithCamera() async {
+    bool hasPermission = await checkCameraPermission();
+    if (!hasPermission) {
+      Get.snackbar("Error", "Camera permission denied");
+      return;
+    }
+
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    if (image != null) {
+      await _processImage(File(image.path));
+    }
+  }
+
+  Future<void> _processImage(File imageFile) async {
     try {
       CroppedFile? cropped = await ImageCropper().cropImage(
-        sourcePath: image.path,
+        sourcePath: imageFile.path,
         aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
         compressQuality: 100,
         maxHeight: 700,
@@ -106,37 +121,36 @@ Future<void> _takePhoto(ImageSource source) async {
             backgroundColor: const Color(0xff212E54),
             toolbarColor: const Color(0xff212E54),
             toolbarWidgetColor: Colors.white,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square,
-            ],
+            aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
         ],
       );
 
       if (cropped != null) {
-        print("Image cropped: ${cropped.path}");
-        File croppedImageFile = File(cropped.path);
-        await _saveProfileImage(croppedImageFile);
-        setState(() {
-          _imagePath = croppedImageFile.path;
-        });
+        await _saveProfileImage(File(cropped.path));
       } else {
-        print("Cropping canceled or failed");
         await _saveProfileImage(imageFile);
       }
     } catch (e) {
-      print("Error cropping image: $e");
+      Get.snackbar("Error", "Failed to process image: $e");
     }
-  } else {
-    print("No image selected");
   }
 
-  Get.back();
+  Future<void> _deleteProfileImage() async {
+    String? userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final Directory userDir = Directory('${appDir.path}/images/$userId');
+
+    if (userDir.existsSync()) {
+      userDir.deleteSync(recursive: true);
+    }
+
+    setState(() {
+      _imagePath = null;
+    });
   }
-  else {
-    print("Storage permission denied");
-  }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -293,10 +307,10 @@ Future<void> _takePhoto(ImageSource source) async {
                 child: ListTile(
                   title: const Text("Camera",
                       style: TextStyle(color: Colors.white, fontSize: 14)),
-                  leading:
-                      const Icon(Icons.camera, color: Colors.white, size: 30),
+                  leading: const Icon(Icons.camera, color: Colors.white, size: 30),
                   onTap: () async {
-                    _takePhoto(ImageSource.camera);
+                    await _takePhotoWithCamera();
+                    Get.back();
                   },
                 ),
               ),
@@ -307,7 +321,8 @@ Future<void> _takePhoto(ImageSource source) async {
                   leading: SvgPicture.asset("assets/Icons/gallery.svg",
                       color: Colors.white, height: 30, width: 30),
                   onTap: () async {
-                    _takePhoto(ImageSource.gallery);
+                    await pickImageFromGallery();
+                    Get.back();
                   },
                 ),
               ),
@@ -315,14 +330,16 @@ Future<void> _takePhoto(ImageSource source) async {
           ),
           const SizedBox(height: 10),
           Expanded(
-                child: ListTile(
-                  title: const Text("Delete Profile Image",
-                      style: TextStyle(color: Colors.white, fontSize: 14)),
-                  leading: Icon(Icons.delete, color: Colors.white,size: 30,),
-                  onTap: () {
-                  },
-                ),
-              ),
+            child: ListTile(
+              title: const Text("Delete Profile Image",
+                  style: TextStyle(color: Colors.white, fontSize: 14)),
+              leading: Icon(Icons.delete, color: Colors.white, size: 30),
+              onTap: () async {
+                await _deleteProfileImage();
+                Get.back();
+              },
+            ),
+          ),
         ],
       ),
     );
