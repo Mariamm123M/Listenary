@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/services/auth_service.dart';
 import 'package:listenary/view/components/custom_textformfield.dart';
@@ -101,7 +102,7 @@ class _LoginState extends State<Login> {
                         return null;
                       },
                       controller: emailController,
-                      prefixIcon: Image.asset("assets/Icons/email.png"),
+                      prefixIcon: SvgPicture.asset("assets/Icons/email.svg"),
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
@@ -171,8 +172,8 @@ class _LoginState extends State<Login> {
                           Get.offAll(() => const BottomNavBarScreen()); // Navigate after Google sign-in
                         }
                       },
-                      child: Image.asset(
-                        "assets/Icons/googl_icon.png",
+                      child: SvgPicture.asset(
+                        "assets/Icons/googl_icon.svg",
                         height: screenHeight * 0.045,
                         width: screenWidth * 0.085,
                         fit: BoxFit.fill,

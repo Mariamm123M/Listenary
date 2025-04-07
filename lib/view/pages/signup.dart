@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/services/auth_service.dart';
 import 'package:listenary/view/components/custom_textformfield.dart';
@@ -138,7 +139,7 @@ class _SignUpState extends State<SignUp> {
                         return null;
                       },
                       controller: emailController,
-                      prefixIcon: Image.asset("assets/Icons/email.png"),
+                      prefixIcon: SvgPicture.asset("assets/Icons/email.svg"),
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
@@ -157,14 +158,14 @@ class _SignUpState extends State<SignUp> {
                         return null;
                       },
                       controller: passwordController,
-                      prefixIcon: Image.asset("assets/Icons/Lock.png"),
+                      prefixIcon: SvgPicture.asset("assets/Icons/Lock.svg"),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
                             isObsecure = !isObsecure;
                           });
                         },
-                        icon: Image.asset("assets/Icons/eye.png"),
+                        icon: SvgPicture.asset("assets/Icons/eye.svg"),
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.015),
@@ -207,8 +208,8 @@ class _SignUpState extends State<SignUp> {
                           _showErrorDialog(context, "Google Sign-In failed. Please try again.");
                         }
                       },
-                      child: Image.asset(
-                        "assets/Icons/googl_icon.png",
+                      child: SvgPicture.asset(
+                        "assets/Icons/googl_icon.svg",
                         height: screenHeight * 0.045,
                         width: screenWidth * 0.085,
                         fit: BoxFit.fill,

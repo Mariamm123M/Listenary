@@ -166,7 +166,7 @@ class _ProfileState extends State<Profile> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProfileImage(
-              radius: 0.25,
+              radius: 0.3,//0.18 difference
               screenWidth: screenWidth,
               imageFile: _imagePath, // Load saved image
               color: const Color(0xff949494),
@@ -284,7 +284,7 @@ class _ProfileState extends State<Profile> {
 
   Widget bottomSheet({required double screenHeight, required screenWidth}) {
     return Container(
-      height: screenHeight * 0.2,
+      height: screenHeight * 0.28,
       width: double.infinity,
       padding: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.025, vertical: screenHeight * 0.01),

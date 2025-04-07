@@ -1,6 +1,7 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/services/permissions/storage_permisson.dart';
 
@@ -80,7 +81,7 @@ class _UploadFileState extends State<UploadFile> {
                         child: Align(
                           alignment: Alignment.center,
                           child: Image.asset(
-                            'assets/Icons/cloud.png',
+                            'assets/Icons/cloud.svg',
                             width: 150,
                             height: 150,
                           ),
@@ -93,8 +94,8 @@ class _UploadFileState extends State<UploadFile> {
                           opacity: 1,
                           child: Transform.rotate(
                             angle: -20.22 * 3.1416 / 180,
-                            child: Image.asset(
-                              'assets/Icons/Vector (1).png',
+                            child: SvgPicture.asset(
+                              'assets/Icons/Layer_1.svg',
                               width: 30,
                               height: 30,
                             ),

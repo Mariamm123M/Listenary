@@ -9,6 +9,7 @@ class ProfileImage extends StatelessWidget {
   final Widget? child; // Optional child widget (like an edit icon)
   final Color? color; // Color for the default SVG icon
   final String? imageFile; // File path of the selected image (nullable)
+  double number = 0;
 
   ProfileImage({
     super.key,
@@ -18,6 +19,7 @@ class ProfileImage extends StatelessWidget {
     this.child,
     this.color = Colors.white, // Default color for SVG
     this.imageFile, // Nullable, will determine which image to show
+    this.number = 0
   });
 
   @override
@@ -35,7 +37,7 @@ class ProfileImage extends StatelessWidget {
           else
             SvgPicture.asset(
               "assets/Icons/username.svg",
-              height: radius * screenWidth, // Adjust based on radius for consistency
+              height: (radius + 0.18 - (number != null ? number : 0)) * screenWidth,
               width: radius * screenWidth,
               color: color, // Color for the SVG icon
             ),

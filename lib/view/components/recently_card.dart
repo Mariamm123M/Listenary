@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/controller/recent_books_controller.dart';
 import 'package:listenary/model/book_model.dart';
@@ -90,13 +91,12 @@ class RecentlyCard extends StatelessWidget {
                       onTap: () {
                         Get.to(() => ReadingPage(
                               book: book,
-                              filePath: '',
                             ));
                       },
                       child: Row(
                         children: [
-                          Image.asset(
-                            "assets/Icons/Headphones.png",
+                          SvgPicture.asset(
+                            "assets/Icons/Headphones.svg",
                             height: 20, // Make sure icons scale well
                           ),
                           SizedBox(

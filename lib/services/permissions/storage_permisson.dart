@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<bool> checkStoragePermission() async {
@@ -17,7 +15,8 @@ Future<bool> checkStoragePermission() async {
     return true;
   } else if (status.isDenied) {
     print('Storage permission denied');
-    Get.showSnackbar(
+    openAppSettings();
+    /*Get.showSnackbar(
       GetSnackBar(
         snackPosition: SnackPosition.TOP,
         title: "Permission Denied",
@@ -35,7 +34,7 @@ Future<bool> checkStoragePermission() async {
         padding: EdgeInsets.all(15),
         duration: Duration(seconds: 5),
       ),
-    );
+    );*/
     return false;
   } else if (status.isPermanentlyDenied) {
     print('Storage permission permanently denied');
@@ -43,7 +42,8 @@ Future<bool> checkStoragePermission() async {
     return false;
   } else if (status.isRestricted) {
     print('Storage permission is restricted');
-    Get.showSnackbar(
+    openAppSettings();
+    /*Get.showSnackbar(
       GetSnackBar(
         snackPosition: SnackPosition.TOP,
         title: "Permission Denied",
@@ -61,7 +61,7 @@ Future<bool> checkStoragePermission() async {
         padding: EdgeInsets.all(15),
         duration: Duration(seconds: 5),
       ),
-    );
+    );*/
     return false;
   }
   return false;

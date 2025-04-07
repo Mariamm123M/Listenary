@@ -19,12 +19,12 @@ class _OnboardingState extends State<Onboarding> {
     {
       "text":
           "Reading is a conversation. All books talk, but a good book listens as well.",
-      "image": "assets/Images/onboarding1.png",
+      "image": "assets/Images/onboarding1.svg",
     },
     {
       "text":
           "Read the best books first, or you may not have a chance to read them at all.",
-      "image": "assets/Images/onboarding2.png",
+      "image": "assets/Images/onboarding2.svg",
     },
   ];
 
@@ -223,7 +223,7 @@ class ImageAndText extends StatelessWidget {
       mainAxisAlignment:
           MainAxisAlignment.center, // Centering the content vertically
       children: [
-        Image.asset(
+        SvgPicture.asset(
           textAndImage["image"]!,
           height:screenWidth * 0.7,
           fit: BoxFit.contain,
@@ -324,7 +324,7 @@ class _InstructionsState extends State<Instructions> {
               ),
             ),
           ),
-        Image.asset("assets/Icons/onboarding_center.png"),
+        SvgPicture.asset("assets/Icons/onboarding_center.svg"),
         for (int i = widget.instructions.length ~/ 2;
             i < widget.instructions.length;
             i++)

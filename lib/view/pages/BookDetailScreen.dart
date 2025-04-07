@@ -115,7 +115,6 @@ class BookDetailScreen extends StatelessWidget {
                     onPressed: () {
                       Get.to(() => ReadingPage(
                             book: book,
-                            filePath: '',
                           ));
                     },
                     child: Text(
@@ -127,20 +126,40 @@ class BookDetailScreen extends StatelessWidget {
                           fontFamily: 'Inter'),
                     )),
                 GestureDetector(
-                  child: Image.asset("assets/Icons/Headphones.png",
+                  child: SvgPicture.asset("assets/Icons/Headphones.svg",
                       height: 45, width: 45, fit: BoxFit.fill),
                   onTap: () {
                     Get.to(() => ReadingPage(
-                          book: book,
-                          filePath: '',
+                      documnetText: '''
+--- Page 1 ---
+The sun dipped low behind the hills as Maya stepped onto the forest trail. The leaves above rustled in a soft breeze, and the path before her shimmered with golden light. It was her first time walking into the Whispering Woods alone, and though stories of old warned of mystery and magic, curiosity guided her steps.
+
+She held a worn notebook in her hand, passed down from her grandmother — a woman who once spoke with trees, or so the legends claimed. The trees seemed to lean closer as she walked, their branches arching like arms eager to greet her.
+
+--- Page 2 ---
+A light mist crept along the forest floor, curling around her boots. The air grew cooler, and the golden light faded into a pale blue twilight. Maya paused by an ancient oak, its trunk wide enough to hide a small room inside. She rested her palm on the bark, and it pulsed — warm, like a heartbeat.
+
+She opened her notebook, and to her surprise, a fresh line of ink appeared on the page:  
+"Welcome back, child of the woods."
+
+Her breath caught. The forest was answering. She wasn’t just following in her grandmother’s footsteps — she was becoming part of the story.
+
+--- Page 3 ---
+Ahead, the trees opened into a small clearing where moonlight bathed a circle of stones. In the center stood a stone pedestal with a crystal orb hovering above it, gently spinning. Maya approached slowly, her footsteps silent on the moss.
+
+As her fingers neared the orb, it glowed brighter, casting images in the air — of her grandmother, young and fearless, walking the same path, touching the same trees. Then it showed Maya herself, a thread of light connecting her heart to the forest.
+
+The woods weren't whispering anymore. They were singing.
+'''
+                        //book: book,
                         ));
                   },
                 )
               ],
             ),
             Padding(
-              padding:
-                  EdgeInsets.only(left: screenWidth * 0.035  , top: screenHeight * 0.05),
+              padding: EdgeInsets.only(
+                  left: screenWidth * 0.035, top: screenHeight * 0.05),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
@@ -185,15 +204,6 @@ class BookDetailScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.transparent,
-        child: Image.asset(
-          'assets/Icons/Right Voice UI.png',
-          width: MediaQuery.of(context).size.width * 0.20,
-          height: MediaQuery.of(context).size.height * 0.09,
         ),
       ),
     );

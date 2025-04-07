@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/controller/favorites_books_controller.dart';
 import 'package:listenary/model/book_model.dart';
@@ -71,8 +72,8 @@ class _BookListScreenState extends State<BookListScreen> {
                 Padding(
                   padding: EdgeInsets.only(
                       right: width * 0.06, top: height * 0.05),
-                  child: Image.asset(
-                    'assets/Icons/library.png',
+                  child: SvgPicture.asset(
+                    'assets/Icons/library2.svg',
                     width: width * 0.08,
                     height: width * 0.08,
                   ),
@@ -224,8 +225,8 @@ class _BookListScreenState extends State<BookListScreen> {
                                       left: 288,
                                       child: GestureDetector(
                                         onTap: () => _deleteBook(index),
-                                        child: Image.asset(
-                                          'assets/Icons/delete.png',
+                                        child: SvgPicture.asset(
+                                          'assets/Icons/delete.svg',
                                           width: 28,
                                           height: 28,
                                         ),
@@ -239,15 +240,6 @@ class _BookListScreenState extends State<BookListScreen> {
                         );
                       })),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.transparent,
-        child: Image.asset(
-          'assets/Icons/Right Voice UI.png',
-          width: width * 0.13,
-          height: height * 0.07,
         ),
       ),
     );

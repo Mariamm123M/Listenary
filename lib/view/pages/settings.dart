@@ -1,14 +1,18 @@
 // Settings.dart:
 
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:listenary/view/components/profile_image.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:listenary/view/components/animation.dart';
 
 
 class UserSettings {
@@ -44,9 +48,9 @@ class FirestoreService {
       User? user = _auth.currentUser;
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set(
-          settings.toMap(),
-          SetOptions(merge: true),
-        );
+              settings.toMap(),
+              SetOptions(merge: true),
+            );
       } else {
         print('User is null');
       }
@@ -55,12 +59,11 @@ class FirestoreService {
     }
   }
 
-
-
   Future<UserSettings?> getUserSettings() async {
     User? user = _auth.currentUser;
     if (user == null) return null;
-    DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+    DocumentSnapshot doc =
+        await _firestore.collection('users').doc(user.uid).get();
     if (doc.exists) {
       return UserSettings.fromMap(doc.data() as Map<String, dynamic>);
     }
@@ -70,10 +73,15 @@ class FirestoreService {
   Stream<UserSettings> userSettingsStream() {
     User? user = _auth.currentUser;
     if (user == null) {
-      return Stream.value(UserSettings(language: 'English', notificationsEnabled: true));
+      return Stream.value(
+          UserSettings(language: 'English', notificationsEnabled: true));
     }
 
-    return _firestore.collection('users').doc(user.uid).snapshots().map((snapshot) {
+    return _firestore
+        .collection('users')
+        .doc(user.uid)
+        .snapshots()
+        .map((snapshot) {
       if (snapshot.exists) {
         return UserSettings.fromMap(snapshot.data() as Map<String, dynamic>);
       }
@@ -89,7 +97,6 @@ class FirestoreService {
   }
 }
 
-
 class Settings extends StatefulWidget {
   const Settings({super.key});
 
@@ -101,13 +108,13 @@ class _SettingsState extends State<Settings> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirestoreService _firestoreService = FirestoreService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   User? _user;
   String name = "User";
   String? profileImage;
   String? _imagePath;
   bool notificationsEnabled = true;
   int selectedSpeaker = 0; // Default to 0
-
 
   void _loadUserSettings() async {
     UserSettings? settings = await _firestoreService.getUserSettings();
@@ -119,7 +126,6 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-
   Future<void> saveUserSettings() async {
     final userSettings = UserSettings(
       language: selectedLanguage,
@@ -127,7 +133,6 @@ class _SettingsState extends State<Settings> {
     );
     await _firestoreService.saveUserSettings(userSettings);
   }
-
 
   Future<void> _loadProfileImage() async {
     String? userId = FirebaseAuth.instance.currentUser?.uid;
@@ -140,7 +145,8 @@ class _SettingsState extends State<Settings> {
 
     List<FileSystemEntity> files = userDir.listSync();
     if (files.isNotEmpty) {
-      files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      files.sort(
+          (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
       setState(() {
         _imagePath = files.first.path;
       });
@@ -151,12 +157,12 @@ class _SettingsState extends State<Settings> {
     {
       "profile": "assets/Images/male.jpg",
       "name": "mark",
-      "voice": "audio/male.mp3"
+      "gender":"male"
     },
     {
       "profile": "assets/Images/female.jpeg",
       "name": "Leila",
-      "voice": "audio/feamle.mp3"
+      "gender": "female"
     }
   ];
   String selectedLanguage = "English";
@@ -180,7 +186,6 @@ class _SettingsState extends State<Settings> {
       profileImage = user?.photoURL;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -256,9 +261,11 @@ class _SettingsState extends State<Settings> {
                     Row(
                       children: [
                         ProfileImage(
-                            radius: 0.15,
+                            radius: 0.1,
+                            number: 0.14,
                             screenWidth: screenWidth,
-                            imageFile: _imagePath, // Use the latest locally stored image
+                            imageFile:
+                                _imagePath, // Use the latest locally stored image
                             color: Color(0xff3C3C3C),
                             onTap: () {
                               //view user profile
@@ -280,7 +287,7 @@ class _SettingsState extends State<Settings> {
                       fontSize: 0.045,
                       screenWidth: screenWidth,
                       context,
-                      image: "assets/Icons/accesability.png",
+                      image: "assets/Icons/Accessibilty.svg",
                       text: "Accessibility Features",
                       children: [
                         feature(context,
@@ -296,7 +303,7 @@ class _SettingsState extends State<Settings> {
                             children: [
                               Row(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceAround,
+                                    MainAxisAlignment.spaceAround,
                                 children: [
                                   buildCustomRadioButton(
                                       screenHeight: screenHeight,
@@ -331,7 +338,7 @@ class _SettingsState extends State<Settings> {
                         fontSize: 0.045,
                         screenWidth: screenWidth,
                         text: "Notifications",
-                        image: "assets/Icons/Notification.png",
+                        image: "assets/Icons/Notification.svg",
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -339,8 +346,8 @@ class _SettingsState extends State<Settings> {
                               buildCustomRadioButton(
                                   screenHeight: screenHeight,
                                   screenWidth: screenWidth,
-                                  selectedCategory: notificationsEnabled ? "On" : "Off"
-                                  ,
+                                  selectedCategory:
+                                      notificationsEnabled ? "On" : "Off",
                                   category: "On",
                                   onSelect: (category) {
                                     //save the value of the notification to on
@@ -353,7 +360,8 @@ class _SettingsState extends State<Settings> {
                                   screenHeight: screenHeight,
                                   screenWidth: screenWidth,
                                   category: "Off",
-                                  selectedCategory: notificationsEnabled ? "On" : "Off",
+                                  selectedCategory:
+                                      notificationsEnabled ? "On" : "Off",
                                   onSelect: (category) {
                                     //save the value of the notification to on
                                     setState(() {
@@ -376,11 +384,11 @@ class _SettingsState extends State<Settings> {
 
   Theme feature(BuildContext context,
       {required double screenWidth,
-        String? image = "",
-        IconData? icon,
-        required String text,
-        required List<Widget> children,
-        required double fontSize}) {
+      String? image = "",
+      IconData? icon,
+      required String text,
+      required List<Widget> children,
+      required double fontSize}) {
     return Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent, // Removes the divider between items
@@ -390,12 +398,12 @@ class _SettingsState extends State<Settings> {
         child: ExpansionTile(
           leading: icon == null
               ? image!.isNotEmpty
-              ? Image.asset(image)
-              : null
+                  ? SvgPicture.asset(image)
+                  : null
               : Icon(
-            icon,
-            color: Color(0xff3C3C3C),
-          ),
+                  icon,
+                  color: Color(0xff3C3C3C),
+                ),
           showTrailingIcon: false,
           title: Text(
             text,
@@ -424,19 +432,19 @@ class _SettingsState extends State<Settings> {
         children: [
           selectedCategory == category
               ? SvgPicture.asset("assets/Icons/checked.svg",
-              color: Color(0xff212E54),
-              height: screenHeight * 0.025,
-              width: screenWidth * 0.015)
-              : Container(
-              width: screenHeight * 0.06,
-              height: screenWidth * 0.05,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
                   color: Color(0xff212E54),
-                  width: 2,
-                ),
-              )),
+                  height: screenHeight * 0.025,
+                  width: screenWidth * 0.015)
+              : Container(
+                  width: screenHeight * 0.06,
+                  height: screenWidth * 0.05,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Color(0xff212E54),
+                      width: 2,
+                    ),
+                  )),
           SizedBox(width: screenWidth * 0.025),
           Text(
             category,
@@ -468,6 +476,40 @@ class _SpeakersState extends State<Speakers> {
   int? playedVoice;
   bool isPlaying = false;
   final AudioPlayer player = AudioPlayer();
+  bool isLoading = false;
+  final Map<int, String> _voiceFilePaths = {};
+ List<Color> colors = [
+    Color(0xff5356FF),
+    Color(0xff3572EF),
+    Color(0xff3ABEF9),
+    Color(0xffA7E6FF)
+  ];
+    List<int> duration = [900, 700, 600, 800, 500];
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    player.onPlayerStateChanged.listen((PlayerState state) {
+      if (state == PlayerState.completed) {
+        setState(() {
+          isPlaying = false;
+        });
+      }
+    });
+    // Initialize voice file paths
+    _initVoiceFiles();
+  }
+
+  Future<void> _initVoiceFiles() async {
+    for (int i = 0; i < widget.speakers.length; i++) {
+      final filePath = await _getVoiceFilePath(i);
+      if (filePath != null) {
+        _voiceFilePaths[i] = filePath;
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -475,14 +517,65 @@ class _SpeakersState extends State<Speakers> {
     super.dispose();
   }
 
-  Future<void> _playPauseAudio(String localFilePath, int index) async {
-    if (playedVoice == index && isPlaying) {
-      await player.pause();
+  Future<String?> _getVoiceFilePath(int index) async {
+    final dir = await getTemporaryDirectory();
+    final filePath = '${dir.path}/speak_$index.mp3';
+    final file = File(filePath);
+    
+    if (await file.exists()) {
+      return filePath;
+    }
+    return null;
+  }
+
+  Future<void> _fetchAndSaveVoice(int index) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final speaker = widget.speakers[index];
+      final gender = speaker["gender"] ?? "male";
+      final name = speaker["name"] ?? "Speaker";
+
+      final response = await http.post(
+        Uri.parse('http://192.168.1.6:5002/tts'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'text': 'Hello, this is $name and I am excited to help you in your journey',
+          'gender': gender,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final dir = await getTemporaryDirectory();
+        final filePath = '${dir.path}/speak_$index.mp3';
+        final file = File(filePath);
+        
+        await file.writeAsBytes(response.bodyBytes);
+        _voiceFilePaths[index] = filePath;
+      } else {
+        print('Failed to fetch TTS audio: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in TTS playback: $e');
+    } finally {
       setState(() {
-        isPlaying = false;
+        isLoading = false;
       });
-    } else {
-      await player.play(AssetSource(localFilePath));
+    }
+  }
+
+  Future<void> _playVoice(int index) async {
+    await player.stop();
+
+    // Check if voice file exists
+    if (!_voiceFilePaths.containsKey(index)) {
+      await _fetchAndSaveVoice(index);
+    }
+
+    if (_voiceFilePaths[index] != null) {
+      await player.play(DeviceFileSource(_voiceFilePaths[index]!));
       setState(() {
         playedVoice = index;
         isPlaying = true;
@@ -490,7 +583,6 @@ class _SpeakersState extends State<Speakers> {
     }
   }
 
-  // Function to save the selected speaker in Firebase
   Future<void> saveSelectedSpeaker(int index) async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
@@ -499,8 +591,6 @@ class _SpeakersState extends State<Speakers> {
       await FirebaseFirestore.instance.collection("users").doc(userId).update({
         "selectedSpeaker": selectedVoice,
       });
-
-      print("Speaker selection saved: $selectedVoice");
     } catch (error) {
       print("Error saving speaker: $error");
     }
@@ -513,9 +603,12 @@ class _SpeakersState extends State<Speakers> {
     final screenWidth = mediaQuery.size.width;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: screenHeight * 0.16, maxWidth: screenWidth * 0.5),
+      constraints: BoxConstraints(
+        maxHeight: screenHeight * 0.16,
+        maxWidth: screenWidth * 0.55,
+      ),
       child: ListView.separated(
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         itemCount: widget.speakers.length,
         separatorBuilder: (BuildContext context, int index) {
           return SizedBox(height: screenHeight * 0.01);
@@ -526,18 +619,23 @@ class _SpeakersState extends State<Speakers> {
               setState(() {
                 selectedSpeaker = index;
               });
-              await saveSelectedSpeaker(index); // Save selection in Firebase
+              await saveSelectedSpeaker(index);
             },
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
                   width: 2,
-                  color: selectedSpeaker == index ? Color(0xff212E54) : Color(0xff9B9B9B),
+                  color: selectedSpeaker == index
+                      ? const Color(0xff212E54)
+                      : const Color(0xff9B9B9B),
                 ),
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.025, vertical: screenHeight * 0.0002),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.025,
+                  vertical: screenHeight * 0.0002,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -552,23 +650,48 @@ class _SpeakersState extends State<Speakers> {
                         Text(
                           widget.speakers[index]["name"]!,
                           style: TextStyle(
-                            color: selectedSpeaker == index ? Color(0xff212E54) : Color(0xff3C3C3C),
+                            color: selectedSpeaker == index
+                                ? const Color(0xff212E54)
+                                : const Color(0xff3C3C3C),
                             fontSize: screenWidth * 0.03,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
-                    SvgPicture.asset("assets/Icons/voice.svg"),
+              playedVoice == index && isPlaying?
+                    Container(
+                      width: 50,
+                      height: 25,
+                      child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: List.generate(
+                                    4,
+                                    (index) => VisualComponent(
+                                      width: 5,
+                                        duration: duration[index % 4],
+                                        color: colors[index % 4])),
+                              ),
+                    ):
+                    Image.asset("assets/Icons/voice.png"),
                     IconButton(
                       onPressed: () async {
-                        await _playPauseAudio(widget.speakers[index]["voice"]!, index);
+                        if (playedVoice == index && isPlaying) {
+                          await player.pause();
+                          setState(() {
+                            isPlaying = false;
+                          });
+                        } else {
+                          await _playVoice(index);
+                        }
                       },
-                      icon: Icon(
-                        playedVoice == index && isPlaying ? Icons.pause : Icons.play_arrow,
-                        size: screenWidth * 0.08,
-                        color: Color(0xff212E54),
-                      ),
+                      icon:  Icon(
+                              playedVoice == index && isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              size: screenWidth * 0.08,
+                              color: const Color(0xff212E54),
+                            ),
                     ),
                   ],
                 ),
