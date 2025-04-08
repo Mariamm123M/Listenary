@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/services/permissions/camera_permission.dart';
 import 'package:listenary/view/pages/UploadImage.dart';
+import 'package:listenary/view/pages/UploadLink.dart';
 import 'package:listenary/view/pages/upload_text.dart';
 import 'UploadFile.dart';
 import 'package:image_picker/image_picker.dart';
@@ -45,16 +47,7 @@ class UploadPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: scaleWidth(32),
-                    height: scaleHeight(32),
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/Icons/small_cloud.png'),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
+                  SvgPicture.asset('assets/Icons/small_cloud.svg'),
                   SizedBox(width: scaleWidth(8)),
                   Text(
                     "Choose an option",
@@ -73,7 +66,7 @@ class UploadPage extends StatelessWidget {
                 scaleWidth,
                 scaleHeight,
                 "Upload files",
-                'assets/Icons/pdf.png',
+                'assets/Icons/Pdf.svg',
                 () => Get.to(() => UploadFile()),
               ),
               SizedBox(height: scaleHeight(10)),
@@ -82,7 +75,7 @@ class UploadPage extends StatelessWidget {
                 scaleWidth,
                 scaleHeight,
                 "Upload images",
-                'assets/Icons/upload.png',
+                'assets/Icons/upload2.svg',
                 () => Get.to(() => UploadImage()),
               ),
               SizedBox(height: scaleHeight(10)),
@@ -91,7 +84,7 @@ class UploadPage extends StatelessWidget {
                 scaleWidth,
                 scaleHeight,
                 "Type or paste text",
-                'assets/Icons/text.png',
+                'assets/Icons/text.svg',
                 () => Get.to(() => UploadText()),
               ),
               SizedBox(height: scaleHeight(10)),
@@ -143,7 +136,7 @@ class UploadPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Image.asset('assets/Icons/scan.png'),
+                        SvgPicture.asset('assets/Icons/scan.svg'),
                         SizedBox(height: scaleHeight(3)),
                         Text(
                           "Scan",
@@ -158,6 +151,15 @@ class UploadPage extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+              SizedBox(height: scaleHeight(10)),
+              _buildOptionCard(
+                context,
+                scaleWidth,
+                scaleHeight,
+                "Type or paste link",
+                'assets/Icons/link.svg',
+                () => Get.to(() => UploadLink()),
               ),
             ],
           ),
@@ -189,7 +191,7 @@ class UploadPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset(assetPath),
+              SvgPicture.asset(assetPath, color: Color(0xff212E54),),
               SizedBox(height: scaleHeight(3)),
               Text(
                 title,

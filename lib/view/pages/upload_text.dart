@@ -231,8 +231,8 @@ class _UploadTextState extends State<UploadText> {
                     Padding(
                       padding: const EdgeInsets.only(right: 10.0, bottom: 60.0),
                       child: GestureDetector(
-                        child: Image.asset(
-                          "assets/Icons/Headphones.png",
+                        child: SvgPicture.asset(
+                          "assets/Icons/Headphones.svg",
                           height: 45, width: 45, fit: BoxFit.fill,
                         ),
                         onTap: () {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:listenary/controller/favorites_books_controller.dart';
 import 'package:listenary/controller/recent_books_controller.dart';
+import 'package:listenary/view/components/bottom_navigation_bar.dart';
 import 'package:listenary/view/pages/help_center.dart';
 import 'package:listenary/view/pages/home.dart';
 import 'package:listenary/view/pages/login.dart' as login_page;
@@ -58,7 +59,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home:  Home()/*SplashScreen()*/,
+      home: BottomNavBarScreen() ,/*Home()*/ 
+      /*SplashScreen()*/
       //initialRoute: "/signup",
       getPages: [
         GetPage(name: "/", page: () => const SplashScreen()),

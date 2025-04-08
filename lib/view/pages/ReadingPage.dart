@@ -5,7 +5,6 @@ import 'package:listenary/model/book_model.dart';
 import 'package:listenary/services/tts/tts_service.dart';
 import 'package:listenary/view/components/SummaryDialog.dart';
 import 'package:listenary/view/components/TranslateDialog.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:listenary/view/components/slider.dart';
 import 'package:listenary/view/components/font_menu.dart';
 import 'package:listenary/view/components/text_display.dart';
@@ -24,38 +23,76 @@ class ReadingPage extends StatefulWidget {
 
 class _ReadingPageState extends State<ReadingPage> {
   bool _isDarkMode = false;
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
+  String lang = "";
   String summarizedText = '';
   String originalText = '';
+  String cleanedText = "";
   bool isSummarized = false;
   final TTSService _ttsService = TTSService();
   List<String> _sentences = [];
   double _sliderValue = 0.0;
 
   @override
-void initState() {
-  super.initState();
-  _ttsService.loadVoicePreference();
-  
-  // Initialize text content
-  originalText = widget.book?.bookcontent ?? widget.documnetText ?? 'No content available';
-  _sentences = originalText.split(RegExp(r'(?<=[.!?])\s*'));
-  print(_sentences);
+  void initState() {
+    super.initState();
+    _ttsService.loadVoicePreference(); // Load voice preference
+    // Initialize text content
+    originalText = widget.book?.bookcontent ??
+        widget.documnetText ??
+        'No content available';
+    _sentences = originalText.split(RegExp(r'(?<=[.!?])\s*'));
+    cleanedText = originalText.replaceAll(
+        RegExp(r'[^a-zA-Z0-9\u0621-\u064A\s.,:?!]'), ' ');
+    lang = detectLanguage(cleanedText);
+    print(lang);
+    // Initialize the TTS service listeners
+    _ttsService.onPositionChanged = (Duration position, int sentenceIndex) {
+      setState(() {
+        _sliderValue = position.inMilliseconds /
+            (_ttsService.totalDuration.inMilliseconds > 0
+                ? _ttsService.totalDuration.inMilliseconds
+                : 1);
+      });
+    };
+    // Listen for audio completion
+    _ttsService.onPlayerComplete = () {
+      setState(() {
+        _sliderValue = 0.0;
+      });
+    };
+  }
+String detectLanguage(String text) {
+  // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
+  final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+  // Check for English letters
+  final englishRegex = RegExp(r'[a-zA-Z]');
 
-  // Set up listeners
-  _ttsService.onPositionChanged = (Duration position, int sentenceIndex) {
-    setState(() {
-      _sliderValue = position.inMilliseconds / _ttsService.totalDuration.inMilliseconds;
-    });
-  };
+  bool hasArabic = arabicRegex.hasMatch(text);
+  bool hasEnglish = englishRegex.hasMatch(text);
 
-  _ttsService.onPlayerComplete = () {
-    setState(() {
-      _sliderValue = 0.0;
-    });
-  };
+  if (hasArabic && !hasEnglish) {
+    return 'ar'; // Arabic text
+  } else if (hasEnglish && !hasArabic) {
+    return 'en'; // English text
+  } else if (hasArabic && hasEnglish) {
+    // Count characters to determine dominant language
+    int arabicCount = text.split('').where((c) => arabicRegex.hasMatch(c)).length;
+    int englishCount = text.split('').where((c) => englishRegex.hasMatch(c)).length;
+    return arabicCount > englishCount ? 'ar' : 'en';
+  } else {
+    return 'en'; // Default to English if no letters detected
+  }
 }
+  void _handlePlayPause() async {
+    if (!_ttsService.isPlaying && _ttsService.totalDuration == Duration.zero) {
+      // First time play - initialize TTS with the text
+      await _ttsService.startTTS(cleanedText);
+    } else {
+      // Regular play/pause
+      await _ttsService.playPauseAudio();
+    }
+    setState(() {});
+  }
 
   void toggleSummary() {
     setState(() {
@@ -122,7 +159,7 @@ void initState() {
     Color backgroundColor = _isDarkMode ? Color(0xFF212E54) : Colors.white;
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -140,8 +177,8 @@ void initState() {
         ),
         title: Text(
           (widget.book == null || widget.book!.booktitle.isEmpty)
-      ? "Unknown Document"
-      : widget.book!.booktitle,
+              ? "Unknown Document"
+              : widget.book!.booktitle,
           style: TextStyle(
             color: _isDarkMode ? Colors.white : Color(0xFF212E54),
             fontSize: 18,
@@ -209,7 +246,8 @@ void initState() {
             },
           ),
           IconButton(
-            icon: SvgPicture.asset('assets/Icons/Note.svg', width: 24, height: 24),
+            icon: SvgPicture.asset('assets/Icons/Note.svg',
+                width: 24, height: 24),
             onPressed: () {
               showFontMenu(context, (value) {
                 setState(() {
@@ -272,65 +310,74 @@ void initState() {
           ),
         ],
       ),
-      body: GestureDetector(
-        onHorizontalDragUpdate:(details) async {
-        // Check if the user swipes from right to left
-        if (details.delta.dx < -10) {
-          await showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (context) => AiAssistant(screenHeight: screenHeight, screenWidth:screenWidth,));
-            }  
-        },
+      body: Directionality(
+        textDirection: lang == "en" ?TextDirection.ltr : TextDirection.rtl,
+        child: GestureDetector(
+          onHorizontalDragUpdate: (details) async {
+            // Check if the user swipes from right to left
+            if (details.delta.dx < -10) {
+              await showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) => AiAssistant(
+                        screenHeight: screenHeight,
+                        screenWidth: screenWidth,
+                      ));
+            }
+          },
           child: Stack(
-        children: [
-          Container(
-            color: _isDarkMode ? Color(0xFF212E54) : Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: TextDisplay(
-                currentSentenceIndex: _ttsService.currentSentenceIndex,
-                sentences: _sentences,
-                selectedFontDecoration: selectedFontDecoration,
-                selectedFontFamily: selectedFontFamily,
-                selectedFontStyle: selectedFontStyle,
-                selectedFontWeight: selectedFontWeight,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Opacity(
-              opacity: 1,
-              child: PlayerControllers(
-                isDarkMode: _isDarkMode,
-                isPlaying: _ttsService.isPlaying,
-                onPlayPause: _ttsService.playPauseAudio,
-                onSkipBackward: _ttsService.skipBackward,
-                onSkipForward: _ttsService.skipForward,
-                onChangeSpeed: _ttsService.changeSpeed,
-                onToggleVoice: _ttsService.toggleVoice,
-                imagePath: _ttsService.imagePath,
-                playbackSpeed: _ttsService.playbackSpeed,
-                slider: SliderAndTime(
-                  isDarkMode: _isDarkMode,
-                  sliderValue: _sliderValue,
-                  currentPosition: _ttsService.currentPosition,
-                  totalDuration: _ttsService.totalDuration,
-                  onSliderChanged: (value) async {
-                    int newPosition =
-                        (value * _ttsService.totalDuration.inMilliseconds)
-                            .toInt();
-                    await _ttsService.seekToPosition(newPosition);
-                  },
-                  screenWidth: screenWidth,
+            children: [
+              Container(
+                color: _isDarkMode ? Color(0xFF212E54) : Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: TextDisplay(
+                    screenHeight: screenHeight,
+                    screenWidth: screenWidth,
+                    currentSentenceIndex: _ttsService.currentSentenceIndex,
+                    sentences: _sentences,
+                    selectedFontDecoration: selectedFontDecoration,
+                    selectedFontFamily: selectedFontFamily,
+                    selectedFontStyle: selectedFontStyle,
+                    selectedFontWeight: selectedFontWeight,
+                  ),
                 ),
-                isSwitchingVoice: _ttsService.isSwitchingVoice,
               ),
-            ),
-          )
-        ],
-      )),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Opacity(
+                  opacity: 1,
+                  child: PlayerControllers(
+                    isDarkMode: _isDarkMode,
+                    isPlaying: _ttsService.isPlaying,
+                    onPlayPause: _handlePlayPause,
+                    onSkipBackward: _ttsService.skipBackward,
+                    onSkipForward: _ttsService.skipForward,
+                    onChangeSpeed: _ttsService.changeSpeed,
+                    onToggleVoice: _ttsService.toggleVoice,
+                    imagePath: _ttsService.imagePath,
+                    playbackSpeed: _ttsService.playbackSpeed,
+                    slider: SliderAndTime(
+                      isDarkMode: _isDarkMode,
+                      sliderValue: _sliderValue,
+                      currentPosition: _ttsService.currentPosition,
+                      totalDuration: _ttsService.totalDuration,
+                      onSliderChanged: (value) async {
+                        int newPosition =
+                            (value * _ttsService.totalDuration.inMilliseconds)
+                                .toInt();
+                        await _ttsService.seekToPosition(newPosition);
+                      },
+                      screenWidth: screenWidth,
+                    ),
+                    isSwitchingVoice: _ttsService.isSwitchingVoice,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

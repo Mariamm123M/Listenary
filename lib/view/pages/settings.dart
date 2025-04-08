@@ -108,7 +108,6 @@ class _SettingsState extends State<Settings> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirestoreService _firestoreService = FirestoreService();
-  final AudioPlayer _audioPlayer = AudioPlayer();
   User? _user;
   String name = "User";
   String? profileImage;

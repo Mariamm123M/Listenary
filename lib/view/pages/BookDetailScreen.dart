@@ -130,27 +130,28 @@ class BookDetailScreen extends StatelessWidget {
                       height: 45, width: 45, fit: BoxFit.fill),
                   onTap: () {
                     Get.to(() => ReadingPage(
-                      documnetText: '''
---- Page 1 ---
-The sun dipped low behind the hills as Maya stepped onto the forest trail. The leaves above rustled in a soft breeze, and the path before her shimmered with golden light. It was her first time walking into the Whispering Woods alone, and though stories of old warned of mystery and magic, curiosity guided her steps.
+                      documnetText : '''
+--- الصفحة 1 ---   
+كانت الشمس تغرب خلف التلال حينما خطت "ليلى" أولى خطواتها في ممر الغابة. كانت أوراق الأشجار تهمس مع النسيم، والطريق أمامها يتلألأ بضوء ذهبي خافت. لم يسبق لها أن دخلت "غابة الهمسات" وحدها، ورغم أن القصص القديمة حذرت من سحرها وغموضها، فإن الفضول كان أقوى من الخوف.
 
-She held a worn notebook in her hand, passed down from her grandmother — a woman who once spoke with trees, or so the legends claimed. The trees seemed to lean closer as she walked, their branches arching like arms eager to greet her.
+في يدها، حملت مفكرة جلدية قديمة ورثتها عن جدتها — تلك المرأة التي قيل إنها تحدثت مع الطيور والأشجار. ومع كل خطوة، بدا أن الأشجار تنحني نحوها كأنها ترحب بها بأغصانها الطويلة!
 
---- Page 2 ---
-A light mist crept along the forest floor, curling around her boots. The air grew cooler, and the golden light faded into a pale blue twilight. Maya paused by an ancient oak, its trunk wide enough to hide a small room inside. She rested her palm on the bark, and it pulsed — warm, like a heartbeat.
+--- الصفحة 2 ---
+الضباب بدأ يزحف على الأرض، يلتف حول قدميها كأن الغابة تعانقها. برد الهواء جعلها تضم معطفها أكثر. وقفت عند شجرة سنديان عتيقة، جذعها عريض يكاد يكون كهفًا صغيرًا. مدت يدها ولمست اللحاء، فإذا به ينبض كقلب حي.
 
-She opened her notebook, and to her surprise, a fresh line of ink appeared on the page:  
-"Welcome back, child of the woods."
+فتحت المفكرة، وفجأة ظهرت سطور جديدة بخط غير مألوف:  
+"مرحبًا بعودتك، يا حفيدة الأرواح."
 
-Her breath caught. The forest was answering. She wasn’t just following in her grandmother’s footsteps — she was becoming part of the story.
+تجمدت في مكانها. الغابة ترد عليها. لم تكن تسير فقط في خطى جدتها — بل كانت تكتب فصلًا جديدًا في نفس الحكاية.
 
---- Page 3 ---
-Ahead, the trees opened into a small clearing where moonlight bathed a circle of stones. In the center stood a stone pedestal with a crystal orb hovering above it, gently spinning. Maya approached slowly, her footsteps silent on the moss.
+--- الصفحة 3 ---
+في الأمام، اتسعت الأشجار لتكشف عن ساحة صغيرة تغمرها أشعة القمر. في المنتصف، كان هناك عمود حجري تعلوه كرة بلورية تدور ببطء في الهواء. اقتربت ليلى بخطى هادئة، والطحلب يمتص صوت خطواتها.
 
-As her fingers neared the orb, it glowed brighter, casting images in the air — of her grandmother, young and fearless, walking the same path, touching the same trees. Then it showed Maya herself, a thread of light connecting her heart to the forest.
+وحينما مدت يدها نحو الكرة، اشتدت إضاءتها، وعرضت في الهواء صورًا — جدتها شابة، تمشي بنفس الطريق، تلمس نفس الأشجار. ثم ظهرت ليلى، وخيط من نور يصل قلبها بقلب الغابة.
 
-The woods weren't whispering anymore. They were singing.
+لم تعد الغابة تهمس. بل كانت تغني.
 '''
+
                         //book: book,
                         ));
                   },
