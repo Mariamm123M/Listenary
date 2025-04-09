@@ -1,9 +1,11 @@
-
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:listenary/services/permissions/storage_permisson.dart';
+import 'ReadingPage.dart';
 
 class UploadFile extends StatefulWidget {
   const UploadFile({Key? key}) : super(key: key);
@@ -14,17 +16,46 @@ class UploadFile extends StatefulWidget {
 
 class _UploadFileState extends State<UploadFile> {
   String? pickedFilePath;
+  File? _selectedFile;
+
+  void uploadAndProcessFile(File file) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://192.168.1.7:5000/upload'),
+    );
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      final extractedText = await response.stream.bytesToString();
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReadingPage(documnetText: extractedText),
+        ),
+      );
+    } else {
+      print("OCR failed: ${response.statusCode}");
+    }
+  }
 
   Future<void> pickDocument() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
-    if (result != null) {
+    if (result != null && result.files.single.path != null) {
       setState(() {
-        pickedFilePath = result.files.single.path; // Get the file path
+        pickedFilePath = result.files.single.path;
+        _selectedFile = File(pickedFilePath!);
       });
+
+      uploadAndProcessFile(_selectedFile!);
+
     } else {
       setState(() {
-        pickedFilePath = null; // Handle case when no file is picked
+        pickedFilePath = null;
+        _selectedFile = null;
       });
     }
   }
