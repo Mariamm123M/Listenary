@@ -24,6 +24,9 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 # Initialize spell checker
 spell = SpellChecker()
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 def clean_text(text):
     if not text:
         return ""
@@ -36,12 +39,31 @@ def clean_text(text):
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
+def spell_correct_text(text):
+    corrected_words = []
+    for word in text.split():
+        if word.isalpha() and word.lower() not in spell:
+            corrected = spell.correction(word)
+            corrected_words.append(corrected if corrected else word)
+        else:
+            corrected_words.append(word)
+    return ' '.join(corrected_words)
+
 def preprocess_image_english(image):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray = cv2.bilateralFilter(gray, 11, 17, 17)
-    gray = cv2.equalizeHist(gray)
-    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    denoised = cv2.fastNlMeansDenoising(thresh, h=30)
+    scale_percent = 150
+    width = int(image.shape[1] * scale_percent / 100)
+    height = int(image.shape[0] * scale_percent / 100)
+    resized = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
+
+    gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+    adaptive = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY, 11, 2
+    )
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    sharpened = cv2.filter2D(adaptive, -1, kernel)
+    denoised = cv2.fastNlMeansDenoising(sharpened, h=10)
+
     return denoised
 
 def preprocess_image_arabic(image):
@@ -55,6 +77,29 @@ def preprocess_image_arabic(image):
     denoised = cv2.fastNlMeansDenoising(dilated, h=30)
     return denoised
 
+def process_image(image_path):
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError("Could not read image file")
+
+    rough_text = pytesseract.image_to_string(img, config='--oem 3 --psm 6 -l eng+ara')
+    lang, _ = langid.classify(rough_text)
+    detected_lang = 'ara' if lang == 'ar' else 'eng'
+
+    if detected_lang == 'ara':
+        processed = preprocess_image_arabic(img)
+        config = '--oem 3 --psm 6 -l ara'
+    else:
+        processed = preprocess_image_english(img)
+        config = '--oem 3 --psm 6 -l eng -c user_defined_dpi=300'
+
+    ocr_result = pytesseract.image_to_string(processed, config=config)
+
+    if detected_lang == 'eng':
+        ocr_result = spell_correct_text(ocr_result)
+
+    return ocr_result
+
 def process_pdf(pdf_path):
     pdf_document = fitz.open(pdf_path)
     full_text = ""
@@ -64,35 +109,26 @@ def process_pdf(pdf_path):
         pix = page.get_pixmap(matrix=fitz.Matrix(3.0, 3.0))
         img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
 
-        # Initial OCR for language detection
         rough_text = pytesseract.image_to_string(img, config="--oem 3 --psm 6 -l eng+ara")
         lang, conf = langid.classify(rough_text)
         detected_lang = 'ara' if lang == 'ar' else 'eng'
 
-        # Apply correct preprocessing and Tesseract config
         if detected_lang == 'ara':
             processed_img = preprocess_image_arabic(img)
             config = '--oem 3 --psm 11 -l ara'
         else:
             processed_img = preprocess_image_english(img)
-            config = '--oem 3 --psm 11 -l eng'
+            config = '--oem 3 --psm 6 -l eng -c user_defined_dpi=300'
 
         ocr_result = pytesseract.image_to_string(processed_img, config=config)
+
+        if detected_lang == 'eng':
+            ocr_result = spell_correct_text(ocr_result)
+
         full_text += f"--- Page {page_num + 1} ---\n{ocr_result}\n"
 
     pdf_document.close()
     return full_text
-
-
-
-def process_image(image_path):
-    img = cv2.imread(image_path)
-    if img is None:
-        raise ValueError("Could not read image file")
-
-    processed = preprocess_image_english(img)
-    ocr_result = pytesseract.image_to_string(processed, config='--oem 3 --psm 11 -l eng')
-    return spell.correction(ocr_result)
 
 def process_docx(docx_path):
     from docx import Document
@@ -152,10 +188,6 @@ def upload_file():
                 result = process_image(file_path)
 
             cleaned_text = clean_text(result)
-
-            print("=== CLEANED TEXT ===")
-            print(cleaned_text)
-
             os.remove(file_path)
 
             if cleaned_text:
@@ -171,10 +203,6 @@ def upload_file():
             return jsonify({"error": str(e)}), 500
 
     return jsonify({"error": "File type not allowed"}), 400
-
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import 'package:listenary/services/permissions/storage_permisson.dart';
+import 'package:http/http.dart' as http;
+import 'ReadingPage.dart';
+
 
 class UploadImage extends StatefulWidget {
   const UploadImage({Key? key}) : super(key: key);
@@ -23,6 +25,26 @@ class _UploadImageState extends State<UploadImage> {
       setState(() {
         _image = File(image.path);
       });
+
+      try {
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('http://192.168.1.7:5000/upload'),
+        );
+        request.files.add(await http.MultipartFile.fromPath('file', image.path));
+        var response = await request.send();
+
+        if (response.statusCode == 200) {
+          final extractedText = await response.stream.bytesToString();
+          Get.to(() => ReadingPage(documnetText: extractedText));
+        } else {
+          print('OCR failed: ${response.statusCode}');
+          Get.snackbar("Error", "Failed to extract text.");
+        }
+      } catch (e) {
+        print('Error uploading file: $e');
+        Get.snackbar("Error", "Could not connect to server.");
+      }
     }
   }
 
