@@ -330,8 +330,9 @@ String detectLanguage(String text) {
               Container(
                 color: _isDarkMode ? Color(0xFF212E54) : Colors.white,
                 child: Padding(
-                  padding: EdgeInsets.all(24.0),
+                  padding: EdgeInsets.symmetric(horizontal: 24.0),
                   child: TextDisplay(
+                    scrollController: _ttsService.scrollController,
                     screenHeight: screenHeight,
                     screenWidth: screenWidth,
                     currentSentenceIndex: _ttsService.currentSentenceIndex,
