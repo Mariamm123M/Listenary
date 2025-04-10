@@ -13,9 +13,9 @@ class TTSService {
   List<String> _sentences = [];
   Duration totalDuration = Duration.zero;
   Duration _originalDuration = Duration.zero;
-  Duration _currentPosition = Duration.zero;
+  Duration currentPosition = Duration.zero;
   double _sliderValue = 0.0;
-  int _currentSentenceIndex = 0;
+  int currentSentenceIndex = 0;
   bool isPlaying = false;
   bool isPaused = false;
   double highlightSpeedFactor = 0.95;
@@ -47,9 +47,9 @@ class TTSService {
   void _handlePlaybackComplete() {
     isPlaying = false;
     isPaused = false;
-    _currentPosition = Duration.zero;
+    currentPosition = Duration.zero;
     _sliderValue = 0.0;
-    _currentSentenceIndex = 0;
+    currentSentenceIndex = 0;
     onPlayerComplete?.call();
   }
 
@@ -60,7 +60,7 @@ class TTSService {
     final sentenceHeight = 50.0;
     final topSentenceIndex = (scrollOffset / sentenceHeight).floor().clamp(0, _sentences.length - 1);
 
-    if (topSentenceIndex != _currentSentenceIndex) {
+    if (topSentenceIndex != currentSentenceIndex) {
       _handleScrollToNewSentence(topSentenceIndex);
     }
   }
@@ -72,8 +72,8 @@ class TTSService {
     // Store current duration state
     Duration previousDuration = totalDuration;
     
-    _currentSentenceIndex = newIndex;
-    onPositionChanged?.call(_currentPosition, _currentSentenceIndex);
+    currentSentenceIndex = newIndex;
+    onPositionChanged?.call(currentPosition, currentSentenceIndex);
     
     _scrollEndTimer = Timer(const Duration(milliseconds: 300), () {
       _isScrolling = false;
@@ -89,16 +89,16 @@ class TTSService {
     if (sentenceIndex < 0 || sentenceIndex >= _sentenceStartTimes.length) return;
 
     final targetPosition = _sentenceStartTimes[sentenceIndex];
-    if ((targetPosition - _currentPosition).abs() < Duration(milliseconds: 200)) {
+    if ((targetPosition - currentPosition).abs() < Duration(milliseconds: 200)) {
       return;
     }
 
     try {
       await _audioPlayer.seek(targetPosition);
-      _currentPosition = targetPosition;
-      _sliderValue = _currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
-      _currentSentenceIndex = sentenceIndex;
-      onPositionChanged?.call(_currentPosition, _currentSentenceIndex);
+      currentPosition = targetPosition;
+      _sliderValue = currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
+      currentSentenceIndex = sentenceIndex;
+      onPositionChanged?.call(currentPosition, currentSentenceIndex);
     } catch (e) {
       print("Error seeking to sentence: $e");
     }
@@ -170,7 +170,7 @@ class TTSService {
         _calculateSentenceTimings();
         
         fromPosition = fromPosition > totalDuration ? totalDuration : fromPosition;
-        _currentSentenceIndex = _getSentenceIndexForPosition(fromPosition);
+        currentSentenceIndex = _getSentenceIndexForPosition(fromPosition);
         
         await _audioPlayer.seek(fromPosition);
         await _audioPlayer.play(UrlSource(file.path));
@@ -178,16 +178,16 @@ class TTSService {
         _audioPlayer.onPositionChanged.listen((Duration position) {
           if (_isScrolling) return;
           
-          _currentPosition = position;
+          currentPosition = position;
           _sliderValue = position.inMilliseconds / _originalDuration.inMilliseconds;
           
           final newIndex = _getSentenceIndexForPosition(position);
-          if (newIndex != _currentSentenceIndex) {
-            _currentSentenceIndex = newIndex;
+          if (newIndex != currentSentenceIndex) {
+            currentSentenceIndex = newIndex;
             _scrollToCurrentSentence();
           }
           
-          onPositionChanged?.call(position, _currentSentenceIndex);
+          onPositionChanged?.call(position, currentSentenceIndex);
         });
 
         isPlaying = true;
@@ -234,7 +234,7 @@ class TTSService {
   void _scrollToCurrentSentence() {
     if (!scrollController.hasClients) return;
     
-    double targetOffset = _currentSentenceIndex * 50.0;
+    double targetOffset = currentSentenceIndex * 50.0;
     double currentOffset = scrollController.offset;
     
     if ((currentOffset - targetOffset).abs() > 1.0) {
@@ -275,8 +275,8 @@ class TTSService {
       
       Duration? position = await _audioPlayer.getCurrentPosition();
       if (position != null) {
-        _currentPosition = position;
-        _sliderValue = _currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
+        currentPosition = position;
+        _sliderValue = currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
         onPositionChanged?.call(position, _getSentenceIndexForPosition(position));
       }
     });
@@ -285,9 +285,9 @@ class TTSService {
   Future<void> seekToPosition(int position) async {
     try {
       await _audioPlayer.seek(Duration(milliseconds: position));
-      _currentPosition = Duration(milliseconds: position);
-      _sliderValue = _currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
-      onPositionChanged?.call(_currentPosition, _getSentenceIndexForPosition(_currentPosition));
+      currentPosition = Duration(milliseconds: position);
+      _sliderValue = currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
+      onPositionChanged?.call(currentPosition, _getSentenceIndexForPosition(currentPosition));
     } catch (e) {
       print("Error seeking: $e");
     }
@@ -335,7 +335,7 @@ class TTSService {
     }
 
     // Store current state
-    Duration previousPosition = _currentPosition;
+    Duration previousPosition = currentPosition;
     
     isSwitchingVoice = true;
     isMale = !isMale;
@@ -351,10 +351,10 @@ class TTSService {
   }
 
   String _getRemainingTextFromCurrentPosition() {
-    if (_currentSentenceIndex < 0 || _currentSentenceIndex >= _sentences.length) {
+    if (currentSentenceIndex < 0 || currentSentenceIndex >= _sentences.length) {
       return _sentences.join(' ');
     }
-    return _sentences.sublist(_currentSentenceIndex).join(' ');
+    return _sentences.sublist(currentSentenceIndex).join(' ');
   }
 
   void dispose() {
