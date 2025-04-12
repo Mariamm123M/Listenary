@@ -35,8 +35,8 @@ class SliderAndTime extends StatelessWidget {
           Slider(
             value: sliderValue,
             onChanged: onSliderChanged,
-            min: 0.0,
-            max: 1.0,
+            //min: 0.0,
+            //max: 1.0,
             activeColor: isDarkMode ? Colors.blue : Colors.yellow,
             inactiveColor: Colors.grey,
           ),

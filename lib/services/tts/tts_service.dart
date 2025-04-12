@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
@@ -8,120 +9,138 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TTSService {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  bool isMale = true; // Default gender for TTS
+  bool isMale = true;
   List<String> _sentences = [];
-  Duration _totalDuration = Duration.zero;
-  Duration _currentPosition = Duration.zero;
+  Duration totalDuration = Duration.zero;
+  Duration _originalDuration = Duration.zero;
+  Duration currentPosition = Duration.zero;
   double _sliderValue = 0.0;
-  int _currentSentenceIndex = 0;
+  int currentSentenceIndex = 0;
   bool isPlaying = false;
   bool isPaused = false;
-  double highlightSpeedFactor = 1;
+  double highlightSpeedFactor = 0.95;
   Timer? _progressTimer;
   List<double> speeds = [1.0, 1.25, 1.5, 2.0];
   int currentSpeedIndex = 0;
   double playbackSpeed = 1.0;
   String imagePath = 'assets/Images/male.jpg';
   bool isSwitchingVoice = false;
+  List<Duration> _sentenceDurations = [];
+  List<Duration> _sentenceStartTimes = [];
+  bool _isScrolling = false;
+  Timer? _scrollEndTimer;
+  String? _currentAudioFile;
 
-  // Callback for real-time updates
+  // Callbacks
   Function(Duration position, int sentenceIndex)? onPositionChanged;
   Function()? onPlayerComplete;
-
-  // Getters
-  int get currentSentenceIndex => _currentSentenceIndex;
-  Duration get totalDuration => _totalDuration;
-  Duration get currentPosition => _currentPosition;
+  ScrollController scrollController = ScrollController();
 
   TTSService() {
     _audioPlayer.onPlayerComplete.listen((event) {
-      isPlaying = false;
-      isPaused = false;
-      _currentPosition = Duration.zero;
-      _sliderValue = 0.0;
-      _currentSentenceIndex = 0;
+      _handlePlaybackComplete();
+    });
 
-      if (onPlayerComplete != null) {
-        onPlayerComplete!();
+    scrollController.addListener(_handleScroll);
+  }
+
+  void _handlePlaybackComplete() {
+    isPlaying = false;
+    isPaused = false;
+    currentPosition = Duration.zero;
+    _sliderValue = 0.0;
+    currentSentenceIndex = 0;
+    onPlayerComplete?.call();
+  }
+
+  void _handleScroll() {
+    if (!isPlaying) return;
+
+    final scrollOffset = scrollController.offset;
+    final sentenceHeight = 50.0;
+    final topSentenceIndex = (scrollOffset / sentenceHeight).floor().clamp(0, _sentences.length - 1);
+
+    if (topSentenceIndex != currentSentenceIndex) {
+      _handleScrollToNewSentence(topSentenceIndex);
+    }
+  }
+
+  void _handleScrollToNewSentence(int newIndex) {
+    _scrollEndTimer?.cancel();
+    _isScrolling = true;
+    
+    // Store current duration state
+    Duration previousDuration = totalDuration;
+    
+    currentSentenceIndex = newIndex;
+    onPositionChanged?.call(currentPosition, currentSentenceIndex);
+    
+    _scrollEndTimer = Timer(const Duration(milliseconds: 300), () {
+      _isScrolling = false;
+      _seekToSentence(newIndex);
+      // Restore original duration if modified
+      if (totalDuration != previousDuration) {
+        totalDuration = previousDuration;
       }
     });
+  }
+
+  Future<void> _seekToSentence(int sentenceIndex) async {
+    if (sentenceIndex < 0 || sentenceIndex >= _sentenceStartTimes.length) return;
+
+    final targetPosition = _sentenceStartTimes[sentenceIndex];
+    if ((targetPosition - currentPosition).abs() < Duration(milliseconds: 200)) {
+      return;
+    }
+
+    try {
+      await _audioPlayer.seek(targetPosition);
+      currentPosition = targetPosition;
+      _sliderValue = currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
+      currentSentenceIndex = sentenceIndex;
+      onPositionChanged?.call(currentPosition, currentSentenceIndex);
+    } catch (e) {
+      print("Error seeking to sentence: $e");
+    }
   }
 
   Future<void> startTTS(String text, {Duration fromPosition = Duration.zero}) async {
     int retryCount = 0;
     const int maxRetries = 3;
 
+    var textHash = text.hashCode;
+    var tempDir = await getTemporaryDirectory();
+    File file = File('${tempDir.path}/speech_$textHash.mp3');
+    _currentAudioFile = file.path;
+
+    if (await file.exists() && file.lengthSync() > 0) {
+      await _playExistingAudio(file, text, fromPosition);
+      return;
+    }
+
     while (retryCount < maxRetries) {
       try {
-        // Clear previous sentences
-        _sentences.clear();
-
-        // Split the text into sentences for display
         _sentences = text.split(RegExp(r'(?<=[.!?])\s*'));
 
-        // Generate a unique filename based on the text
-        var textHash = text.hashCode;
-        var tempDir = await getTemporaryDirectory();
-        File file = File('${tempDir.path}/speech_$textHash.mp3');
-
-        // Send the text to the TTS server
-        var response = await http
-            .post(
-              Uri.parse('http://192.168.1.6:5002/tts'),
-              headers: {'Content-Type': 'application/json'},
-              body: json.encode({
-                "text": text,
-                "gender": isMale ? "male" : "female",
-              }),
-            )
-            .timeout(Duration(seconds: 60));
+        var response = await http.post(
+          Uri.parse('http://192.168.1.4:5002/tts'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            "text": text,
+            "gender": isMale ? "male" : "female",
+          }),
+        ).timeout(Duration(seconds: 60));
 
         if (response.statusCode == 200) {
           await file.writeAsBytes(response.bodyBytes);
-
-          // Debug: Print file path and size
-          print('Audio file saved at: ${file.path}');
-          print('File size: ${file.lengthSync()} bytes');
-
-          // Load the audio file
-          await _audioPlayer.setSource(UrlSource(file.path));
-
-          // Wait for the audio file to be ready
-          final duration = await _audioPlayer.getDuration();
-          if (duration != null) {
-            _totalDuration = duration;
-
-            // Ensure fromPosition does not exceed the total duration
-            if (fromPosition > _totalDuration) {
-              fromPosition = _totalDuration;
-            }
-
-            // Seek to the position where the last speaker stopped
-            await _audioPlayer.seek(fromPosition).timeout(Duration(seconds: 10));
-
-            // Play the audio file
-            await _audioPlayer.play(UrlSource(file.path));
-
-            // Listen for position changes to update the highlighted sentence
-            _audioPlayer.onPositionChanged.listen((Duration position) {
-              _currentPosition = position;
-              _sliderValue = position.inMilliseconds / _totalDuration.inMilliseconds;
-              _currentSentenceIndex = getCurrentSentenceIndex(position);
-
-              // Notify listeners of position changes
-              if (onPositionChanged != null) {
-                onPositionChanged!(position, _currentSentenceIndex);
-              }
-            });
-
-            isPlaying = true;
-          }
+          await _playExistingAudio(file, text, fromPosition);
+          break;
         } else {
           print('Failed to generate speech. Status code: ${response.statusCode}');
+          retryCount++;
         }
-        break; // Exit the loop if successful
       } on TimeoutException {
-        print("Timeout: Audio playback took too long.");
+        print("Timeout: Audio generation took too long.");
         retryCount++;
         if (retryCount >= maxRetries) {
           print("Max retries reached. Giving up.");
@@ -138,60 +157,127 @@ class TTSService {
     }
   }
 
-  int getCurrentSentenceIndex(Duration position) {
-    if (_sentences.isEmpty || _totalDuration == Duration.zero) return 0;
+  Future<void> _playExistingAudio(File file, String text, Duration fromPosition) async {
+    try {
+      _sentences = text.split(RegExp(r'(?<=[.!?])\s*'));
+      
+      await _audioPlayer.setSource(UrlSource(file.path));
+      final duration = await _audioPlayer.getDuration();
+      
+      if (duration != null) {
+        totalDuration = duration;
+        _originalDuration = duration; // Store original duration
+        _calculateSentenceTimings();
+        
+        fromPosition = fromPosition > totalDuration ? totalDuration : fromPosition;
+        currentSentenceIndex = _getSentenceIndexForPosition(fromPosition);
+        
+        await _audioPlayer.seek(fromPosition);
+        await _audioPlayer.play(UrlSource(file.path));
+        
+        _audioPlayer.onPositionChanged.listen((Duration position) {
+          if (_isScrolling) return;
+          
+          currentPosition = position;
+          _sliderValue = position.inMilliseconds / _originalDuration.inMilliseconds;
+          
+          final newIndex = _getSentenceIndexForPosition(position);
+          if (newIndex != currentSentenceIndex) {
+            currentSentenceIndex = newIndex;
+            _scrollToCurrentSentence();
+          }
+          
+          onPositionChanged?.call(position, currentSentenceIndex);
+        });
 
-    double progress =
-        (position.inMilliseconds / _totalDuration.inMilliseconds) * highlightSpeedFactor;
-    int sentenceIndex = (progress * _sentences.length).floor();
+        isPlaying = true;
+      }
+    } catch (e) {
+      print('Error playing existing audio: $e');
+    }
+  }
 
-    // Clamp sentence index to prevent going out of bounds
-    return sentenceIndex.clamp(0, _sentences.length - 1);
+  void _calculateSentenceTimings() {
+    _sentenceStartTimes.clear();
+    _sentenceDurations.clear();
+    
+    if (_sentences.isEmpty || _originalDuration == Duration.zero) return;
+    
+    int totalChars = _sentences.fold(0, (sum, sentence) => sum + sentence.length);
+    if (totalChars == 0) return;
+    
+    Duration currentStart = Duration.zero;
+    
+    for (String sentence in _sentences) {
+      _sentenceStartTimes.add(currentStart);
+      
+      double ratio = sentence.length / totalChars;
+      Duration sentenceDuration = Duration(
+        milliseconds: (_originalDuration.inMilliseconds * ratio).round()
+      );
+      
+      _sentenceDurations.add(sentenceDuration);
+      currentStart += sentenceDuration;
+    }
+  }
+
+  int _getSentenceIndexForPosition(Duration position) {
+    for (int i = 0; i < _sentenceStartTimes.length; i++) {
+      if (i == _sentenceStartTimes.length - 1 || 
+          position < _sentenceStartTimes[i + 1]) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  void _scrollToCurrentSentence() {
+    if (!scrollController.hasClients) return;
+    
+    double targetOffset = currentSentenceIndex * 50.0;
+    double currentOffset = scrollController.offset;
+    
+    if ((currentOffset - targetOffset).abs() > 1.0) {
+      scrollController.animateTo(
+        targetOffset,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   Future<void> playPauseAudio() async {
     try {
       if (isPlaying) {
-        // Pause the audio if it's currently playing
-        await _audioPlayer.pause().timeout(Duration(seconds: 15));
+        await _audioPlayer.pause();
         isPlaying = false;
         isPaused = true;
-        _progressTimer?.cancel(); // Stop updating progress
+        _progressTimer?.cancel();
       } else {
         if (isPaused) {
-          // Resume from where it was paused
-          await _audioPlayer.resume().timeout(Duration(seconds: 15));
-        } else {
-          // If not paused, start from the beginning
-          await _audioPlayer.seek(Duration.zero);
-          await _audioPlayer.play(UrlSource((_audioPlayer.source as UrlSource).url)).timeout(Duration(seconds: 15));
+          await _audioPlayer.resume();
+        } else if (_currentAudioFile != null) {
+          await _audioPlayer.play(UrlSource(_currentAudioFile!));
         }
         isPlaying = true;
         isPaused = false;
-        startUpdatingProgress();
-      }
-    } on TimeoutException {
-      print("Timeout: Audio operation took too long.");
-      if (onPlayerComplete != null) {
-        onPlayerComplete!();
+        _startProgressUpdates();
       }
     } catch (e) {
-      print("Error: $e");
-      if (onPlayerComplete != null) {
-        onPlayerComplete!();
-      }
+      print("Error in playPause: $e");
     }
   }
 
-  void startUpdatingProgress() {
-    _progressTimer?.cancel(); // Cancel any existing timer
+  void _startProgressUpdates() {
+    _progressTimer?.cancel();
     _progressTimer = Timer.periodic(Duration(milliseconds: 200), (timer) async {
-      Duration? currentPosition = await _audioPlayer.getCurrentPosition();
-      if (currentPosition != null) {
-        _currentPosition = currentPosition;
-        if (onPositionChanged != null) {
-          onPositionChanged!(currentPosition, getCurrentSentenceIndex(currentPosition));
-        }
+      if (!isPlaying || _isScrolling) return;
+      
+      Duration? position = await _audioPlayer.getCurrentPosition();
+      if (position != null) {
+        currentPosition = position;
+        _sliderValue = currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
+        onPositionChanged?.call(position, _getSentenceIndexForPosition(position));
       }
     });
   }
@@ -199,18 +285,11 @@ class TTSService {
   Future<void> seekToPosition(int position) async {
     try {
       await _audioPlayer.seek(Duration(milliseconds: position));
-      // Update the current position only after seek is successful
-      _currentPosition = Duration(milliseconds: position);
-      _sliderValue = _currentPosition.inMilliseconds / _totalDuration.inMilliseconds;
-      if (onPositionChanged != null) {
-        onPositionChanged!(_currentPosition, getCurrentSentenceIndex(_currentPosition));
-      }
-    } on TimeoutException {
-      print("Seek operation timed out. Retrying...");
-      await Future.delayed(Duration(seconds: 1));
-      await _audioPlayer.seek(Duration(milliseconds: position));
+      currentPosition = Duration(milliseconds: position);
+      _sliderValue = currentPosition.inMilliseconds / _originalDuration.inMilliseconds;
+      onPositionChanged?.call(currentPosition, _getSentenceIndexForPosition(currentPosition));
     } catch (e) {
-      print("Error during seek: $e");
+      print("Error seeking: $e");
     }
   }
 
@@ -223,10 +302,9 @@ class TTSService {
 
   void skipForward() async {
     final currentPosition = await _audioPlayer.getCurrentPosition();
-    final duration = await _audioPlayer.getDuration();
-    if (currentPosition != null && duration != null) {
+    if (currentPosition != null) {
       int newPosition = (currentPosition + Duration(seconds: 10)).inMilliseconds;
-      newPosition = newPosition.clamp(0, duration.inMilliseconds);
+      newPosition = newPosition.clamp(0, _originalDuration.inMilliseconds);
       await seekToPosition(newPosition);
     }
   }
@@ -235,71 +313,55 @@ class TTSService {
     final currentPosition = await _audioPlayer.getCurrentPosition();
     if (currentPosition != null) {
       int newPosition = (currentPosition - Duration(seconds: 10)).inMilliseconds;
-      newPosition = newPosition.clamp(0, _totalDuration.inMilliseconds);
+      newPosition = newPosition.clamp(0, _originalDuration.inMilliseconds);
       await seekToPosition(newPosition);
     }
   }
 
   Future<void> loadVoicePreference() async {
     final prefs = await SharedPreferences.getInstance();
-    isMale = prefs.getBool('isMaleVoice') ?? true; // Default to male
+    isMale = prefs.getBool('isMaleVoice') ?? true;
     imagePath = isMale ? 'assets/Images/male.jpg' : 'assets/Images/female.jpeg';
   }
 
   Future<void> saveVoicePreference(bool isMale) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isMaleVoice', isMale); // Save the voice preference
+    await prefs.setBool('isMaleVoice', isMale);
   }
 
   void toggleVoice() async {
-    print('Toggling voice...');
-    print('Current Position: $_currentPosition');
-    print('Total Duration: $_totalDuration');
-
-    // Stop and release the current audio player
     if (isPlaying) {
       await playPauseAudio();
     }
 
-    isSwitchingVoice = true; // Toggle the voice
-
-    // Toggle the voice and update the image
+    // Store current state
+    Duration previousPosition = currentPosition;
+    
+    isSwitchingVoice = true;
     isMale = !isMale;
     imagePath = isMale ? 'assets/Images/male.jpg' : 'assets/Images/female.jpeg';
+    await saveVoicePreference(isMale);
 
-    await saveVoicePreference(isMale); // Save the new preference
-
-    // Get the remaining text from where the last speaker stopped
     String remainingText = _getRemainingTextFromCurrentPosition();
-    print('Remaining Text: $remainingText');
-
-    // Calculate the remaining duration
-    Duration remainingDuration = _totalDuration - _currentPosition;
-
-    // Restart TTS with the remaining text, starting from the current position
-    await startTTS(remainingText, fromPosition: _currentPosition);
-
-    // Update the total duration to reflect the remaining duration
-    _totalDuration = remainingDuration;
-
-    isSwitchingVoice = false; // Hide loading indicator
+    await startTTS(remainingText, fromPosition: previousPosition);
+    
+    // Restore original duration
+    totalDuration = _originalDuration;
+    isSwitchingVoice = false;
   }
 
   String _getRemainingTextFromCurrentPosition() {
-    // Ensure _currentSentenceIndex is within bounds
-    if (_currentSentenceIndex < 0 || _currentSentenceIndex >= _sentences.length) {
-      // If the index is out of bounds, return the entire text
-      print('Current Sentence Index is out of bounds. Returning entire text.');
+    if (currentSentenceIndex < 0 || currentSentenceIndex >= _sentences.length) {
       return _sentences.join(' ');
-    } else {
-      // Return the remaining text from the current position
-      String remainingText = _sentences.sublist(_currentSentenceIndex).join(' ');
-      return remainingText;
     }
+    return _sentences.sublist(currentSentenceIndex).join(' ');
   }
 
   void dispose() {
-    _audioPlayer.dispose(); // Dispose of the audio player
-    _progressTimer?.cancel(); // Cancel the progress timer
+    _audioPlayer.dispose();
+    _progressTimer?.cancel();
+    _scrollEndTimer?.cancel();
+    scrollController.removeListener(_handleScroll);
+    scrollController.dispose();
   }
 }

@@ -187,8 +187,17 @@ class _HomeState extends State<Home> {
       description:
           '''the ChatGPT said: The Art of Stone is an exploration of the craftsmanship behind stone artistry, showcasing both traditional and contemporary approaches to sculpting and shaping this unique material. The book highlights the skill and artistry of stoneworkers, focusing on techniques and the creative potential of stone as an artistic medium. It features insights from experts like Alice Minter, Sophie Morris, and Rosie Mills, along with stunning photography and illustrations that capture the beauty and complexity of stone art. ABRAMS BOOKS''',
       bookcontent:
-          '''The "Art of Stone" dives into the world of stone artistry, highlighting the history, techniques, and artistry behind the medium. From ancient stone sculptures to modern interpretations, the book provides a comprehensive overview of stone art. The content covers how stone as a material has been used in both traditional and contemporary art, with a special focus on the tools and methods used by stone sculptors to create timeless pieces.''',
-    ),
+'''
+    Page 1: The sky was a brilliant shade of blue, and the sun gleamed brightly over the vast expanse of the ocean. The ship set sail on its journey into the depths, where light could not reach and the human eye could not perceive the mysteries below. Onboard, a team of scientists was eager to uncover the secrets of the sea, diving into an adventure like no other. The atmosphere was filled with excitement and anticipation, as each crew member imagined what they might encounter beneath the waves.
+
+    Page 2: After hours of sailing, the ship reached the designated point for the dive. The crew prepared the submarine that would carry them into the ocean's deep. Below the surface, marine creatures moved gracefully, their vibrant colors and strange forms captivating the scientists. One of them pointed out a peculiar creature, unlike anything they'd ever seen before—part fish, part octopus. This discovery marked only the beginning of their extraordinary findings.
+
+    Page 3: As the submarine descended deeper into the abyss, the darkness became more oppressive. Yet, thanks to the bright lights aboard the vessel, the team could still see the fascinating life around them. Suddenly, a massive sea creature appeared in front of them, its size far exceeding anything they had expected. Hearts raced. Was this creature dangerous, or merely curious? Questions raced through their minds as the thrill of discovery grew stronger.
+
+    Page 4: The team decided to follow the massive creature at a safe distance, documenting its movements. It swam with a slow, deliberate grace, seemingly unbothered by the submarine. As they ventured further into the deep, strange and unfamiliar species began to appear—giant jellyfish that pulsed with light, bioluminescent fish that flickered like stars in the black waters. The mysteries of the deep continued to unfold before their eyes, and with each discovery came new questions.
+
+    Page 5: Hours passed as the submarine delved further into the ocean's depths, revealing a world that few had ever seen. The pressure outside was immense, but the crew inside remained safe, fascinated by the incredible sights before them. They encountered underwater caves, shimmering with unknown minerals, and schools of glowing fish that moved as one, creating patterns in the darkness. The adventure was far from over, but one thing was certain: the ocean held more secrets than anyone could have imagined.
+  '''    ),
   ];
 
   @override

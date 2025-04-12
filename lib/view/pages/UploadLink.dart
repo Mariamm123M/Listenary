@@ -45,7 +45,7 @@ class UploadLink extends StatelessWidget {
                 TextFormField(
                   validator: validateLink,
                   controller: textController,
-                  maxLines: 10,
+                  maxLines: 8,
                   decoration: InputDecoration(
                     hintText: "Enter Link",
                     contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
