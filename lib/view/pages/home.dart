@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,7 +10,7 @@ import 'package:listenary/view/pages/SearchPage.dart';
 import 'package:listenary/view/pages/profile.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-
+import 'package:http/http.dart' as http;
 import '../components/profile_image.dart';
 
 class Home extends StatefulWidget {
@@ -24,6 +25,31 @@ class _HomeState extends State<Home> {
 
   String name = "User";
   String? _imagePath;
+
+  List<Book> libraryBooks = [];
+  bool isLoading = true;
+
+  Future<void> fetchBooks() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.7:5000/get_books'), // 🔁 Replace with your Flask URL
+      );
+      if (response.statusCode == 200) {
+        List data = jsonDecode(response.body);
+        setState(() {
+          libraryBooks = data.map((book) => Book.fromJson(book)).toList();
+          isLoading = false;
+        });
+        print(libraryBooks);
+      } else {
+        print('Failed to load books. Status code: ${response.statusCode}');
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      print("Error fetching books: $e");
+      setState(() => isLoading = false);
+    }
+  }
 
   Future<void> _loadProfileImage() async {
     String? userId = FirebaseAuth.instance.currentUser?.uid;
@@ -48,7 +74,8 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _getUserName();
-    _loadProfileImage(); // Load the profile image on startup
+    _loadProfileImage();
+    fetchBooks();
   }
 
   void _getUserName() {
@@ -76,129 +103,7 @@ class _HomeState extends State<Home> {
 
   String selectedCategory = "All";
 
-  List<Book> libraryBooks = [
-    Book(
-        bookimage: AssetImage("assets/Images/book1.png"),
-        booktitle: "Here Is Real Magic",
-        description: "This is a memoir by magician Nate Staniforth...",
-        author: "Nate Staniforth",
-        pages: 256,
-        bookcontent:
-            "In 'Here Is Real Magic,' Nate Staniforth reflects on his life as a magician. He explores the magic of everyday life and how performing magic on stage helped him reconnect with a sense of wonder that we often lose as adults.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book2.png"),
-        booktitle: "Standing Out",
-        description: "This is a career development book...",
-        author: "Alex Abramin",
-        pages: 162,
-        bookcontent:
-            "In 'Standing Out,' Alex Abramin offers practical advice for professionals looking to distinguish themselves in their careers. He covers topics like building a personal brand, networking, and developing a unique skill set that sets you apart in a competitive job market.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book3.png"),
-        booktitle: "The One",
-        description: "A sci-fi thriller set in a near-future world...",
-        author: "John Marrs",
-        pages: 416,
-        bookcontent:
-            "'The One' follows a group of people who are matched with their supposed perfect partner based on DNA testing. As their relationships unfold, the characters confront the dangers of knowing too much about their fate and question whether they can truly trust science when it comes to love.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book4.png"),
-        booktitle: "Range",
-        description: "This non-fiction book argues that generalists...",
-        author: "David Epstein",
-        pages: 352,
-        bookcontent:
-            "In 'Range,' David Epstein makes a compelling argument that breadth of knowledge and experience is more valuable than specialization in many fields. Through examples from sports, science, and business, he shows how generalists tend to excel in unpredictable environments.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book5.jpg"),
-        booktitle: "Chemistry",
-        description: "A novel about an unnamed Chinese-American woman...",
-        author: "Weike Wang",
-        pages: 224,
-        bookcontent:
-            "'Chemistry' is a witty, emotional novel about a young scientist grappling with the pressures of academia and family expectations. The protagonist struggles with her identity and her relationships, all while trying to complete her PhD in chemistry.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book6.jpg"),
-        booktitle: "The Adventures of Sherlock Holmes",
-        description: "A collection of twelve short stories featuring...",
-        author: "Sir Arthur Conan Doyle",
-        pages: 307,
-        bookcontent:
-            "'The Adventures of Sherlock Holmes' features twelve thrilling cases of the famous detective and his trusty companion, Dr. Watson. From 'A Scandal in Bohemia' to 'The Red-Headed League,' these stories capture the brilliance of Holmes as he unravels complex mysteries.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book7.jpg"),
-        booktitle: "Pride and Prejudice",
-        description: "A classic romantic novel first published in 1813...",
-        author: "Jane Austen",
-        pages: 432,
-        bookcontent:
-            "'Pride and Prejudice' is a timeless story of love, class, and misunderstandings. Elizabeth Bennet, one of five sisters, meets the enigmatic Mr. Darcy, and despite initial judgments and obstacles, the two gradually come to realize their deep affection for one another.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-        bookimage: AssetImage("assets/Images/book8.jpg"),
-        booktitle: "Ali Baba and the Forty Thieves",
-        description: "A famous folk tale about Ali Baba...",
-        author: "Anonymous",
-        pages: 30,
-        bookcontent:
-            "'Ali Baba and the Forty Thieves' is a tale from 'One Thousand and One Nights' about a poor woodcutter who discovers a secret cave full of treasure, guarded by a band of forty thieves. With the help of his clever servant, Morgiana, Ali Baba outwits the thieves and secures his fortune.",
-        rating: 5.0,
-        audioFilePath: "",
-        language: "en"),
-    Book(
-      booktitle: "The Art Stone",
-      author: "Jesse A. Ellis",
-      bookimage: AssetImage('assets/Images/TheArtStone.png'),
-      rating: 3.4,
-      pages: 540,
-      language: "ENG",
-      description:
-          '''the ChatGPT said: The Art of Stone is an exploration of the craftsmanship behind stone artistry, showcasing both traditional and contemporary approaches to sculpting and shaping this unique material. The book highlights the skill and artistry of stoneworkers, focusing on techniques and the creative potential of stone as an artistic medium. It features insights from experts like Alice Minter, Sophie Morris, and Rosie Mills, along with stunning photography and illustrations that capture the beauty and complexity of stone art. ABRAMS BOOKS''',
-      bookcontent:
-          '''The "Art of Stone" dives into the world of stone artistry, highlighting the history, techniques, and artistry behind the medium. From ancient stone sculptures to modern interpretations, the book provides a comprehensive overview of stone art. The content covers how stone as a material has been used in both traditional and contemporary art, with a special focus on the tools and methods used by stone sculptors to create timeless pieces.''',
-    ),
-    Book(
-      booktitle: "The Art Stone",
-      author: "Jesse A. Ellis",
-      bookimage: AssetImage('assets/Images/TheArtStone.png'),
-      rating: 3.4,
-      pages: 540,
-      language: "ENG",
-      description:
-          '''the ChatGPT said: The Art of Stone is an exploration of the craftsmanship behind stone artistry, showcasing both traditional and contemporary approaches to sculpting and shaping this unique material. The book highlights the skill and artistry of stoneworkers, focusing on techniques and the creative potential of stone as an artistic medium. It features insights from experts like Alice Minter, Sophie Morris, and Rosie Mills, along with stunning photography and illustrations that capture the beauty and complexity of stone art. ABRAMS BOOKS''',
-      bookcontent:
-'''
-    Page 1: The sky was a brilliant shade of blue, and the sun gleamed brightly over the vast expanse of the ocean. The ship set sail on its journey into the depths, where light could not reach and the human eye could not perceive the mysteries below. Onboard, a team of scientists was eager to uncover the secrets of the sea, diving into an adventure like no other. The atmosphere was filled with excitement and anticipation, as each crew member imagined what they might encounter beneath the waves.
 
-    Page 2: After hours of sailing, the ship reached the designated point for the dive. The crew prepared the submarine that would carry them into the ocean's deep. Below the surface, marine creatures moved gracefully, their vibrant colors and strange forms captivating the scientists. One of them pointed out a peculiar creature, unlike anything they'd ever seen before—part fish, part octopus. This discovery marked only the beginning of their extraordinary findings.
-
-    Page 3: As the submarine descended deeper into the abyss, the darkness became more oppressive. Yet, thanks to the bright lights aboard the vessel, the team could still see the fascinating life around them. Suddenly, a massive sea creature appeared in front of them, its size far exceeding anything they had expected. Hearts raced. Was this creature dangerous, or merely curious? Questions raced through their minds as the thrill of discovery grew stronger.
-
-    Page 4: The team decided to follow the massive creature at a safe distance, documenting its movements. It swam with a slow, deliberate grace, seemingly unbothered by the submarine. As they ventured further into the deep, strange and unfamiliar species began to appear—giant jellyfish that pulsed with light, bioluminescent fish that flickered like stars in the black waters. The mysteries of the deep continued to unfold before their eyes, and with each discovery came new questions.
-
-    Page 5: Hours passed as the submarine delved further into the ocean's depths, revealing a world that few had ever seen. The pressure outside was immense, but the crew inside remained safe, fascinated by the incredible sights before them. They encountered underwater caves, shimmering with unknown minerals, and schools of glowing fish that moved as one, creating patterns in the darkness. The adventure was far from over, but one thing was certain: the ocean held more secrets than anyone could have imagined.
-  '''    ),
-  ];
 
   @override
   Widget build(BuildContext context) {

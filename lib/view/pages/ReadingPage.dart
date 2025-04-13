@@ -61,28 +61,28 @@ class _ReadingPageState extends State<ReadingPage> {
       });
     };
   }
-String detectLanguage(String text) {
-  // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
-  final arabicRegex = RegExp(r'[\u0600-\u06FF]');
-  // Check for English letters
-  final englishRegex = RegExp(r'[a-zA-Z]');
+  String detectLanguage(String text) {
+    // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
+    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+    // Check for English letters
+    final englishRegex = RegExp(r'[a-zA-Z]');
 
-  bool hasArabic = arabicRegex.hasMatch(text);
-  bool hasEnglish = englishRegex.hasMatch(text);
+    bool hasArabic = arabicRegex.hasMatch(text);
+    bool hasEnglish = englishRegex.hasMatch(text);
 
-  if (hasArabic && !hasEnglish) {
-    return 'ar'; // Arabic text
-  } else if (hasEnglish && !hasArabic) {
-    return 'en'; // English text
-  } else if (hasArabic && hasEnglish) {
-    // Count characters to determine dominant language
-    int arabicCount = text.split('').where((c) => arabicRegex.hasMatch(c)).length;
-    int englishCount = text.split('').where((c) => englishRegex.hasMatch(c)).length;
-    return arabicCount > englishCount ? 'ar' : 'en';
-  } else {
-    return 'en'; // Default to English if no letters detected
+    if (hasArabic && !hasEnglish) {
+      return 'ar'; // Arabic text
+    } else if (hasEnglish && !hasArabic) {
+      return 'en'; // English text
+    } else if (hasArabic && hasEnglish) {
+      // Count characters to determine dominant language
+      int arabicCount = text.split('').where((c) => arabicRegex.hasMatch(c)).length;
+      int englishCount = text.split('').where((c) => englishRegex.hasMatch(c)).length;
+      return arabicCount > englishCount ? 'ar' : 'en';
+    } else {
+      return 'en'; // Default to English if no letters detected
+    }
   }
-}
   void _handlePlayPause() async {
     if (!_ttsService.isPlaying && _ttsService.totalDuration == Duration.zero) {
       // First time play - initialize TTS with the text
@@ -109,7 +109,7 @@ String detectLanguage(String text) {
     if (text.isEmpty) return 'No text available to summarize.';
 
     List<String> sentences =
-        text.split('.').where((s) => s.trim().isNotEmpty).toList();
+    text.split('.').where((s) => s.trim().isNotEmpty).toList();
 
     Map<String, int> wordFrequency = {};
     List<String> words = text
@@ -257,9 +257,9 @@ String detectLanguage(String text) {
                         : FontWeight.bold;
                   } else if (value == 'Underline') {
                     selectedFontDecoration =
-                        (selectedFontDecoration == TextDecoration.underline)
-                            ? TextDecoration.none
-                            : TextDecoration.underline;
+                    (selectedFontDecoration == TextDecoration.underline)
+                        ? TextDecoration.none
+                        : TextDecoration.underline;
                   } else if (value == 'Italic') {
                     selectedFontStyle = (selectedFontStyle == FontStyle.italic)
                         ? FontStyle.normal
@@ -320,9 +320,9 @@ String detectLanguage(String text) {
                   context: context,
                   isScrollControlled: true,
                   builder: (context) => AiAssistant(
-                        screenHeight: screenHeight,
-                        screenWidth: screenWidth,
-                      ));
+                    screenHeight: screenHeight,
+                    screenWidth: screenWidth,
+                  ));
             }
           },
           child: Stack(
@@ -365,8 +365,8 @@ String detectLanguage(String text) {
                       totalDuration: _ttsService.totalDuration,
                       onSliderChanged: (value) async {
                         int newPosition =
-                            (value * _ttsService.totalDuration.inMilliseconds)
-                                .toInt();
+                        (value * _ttsService.totalDuration.inMilliseconds)
+                            .toInt();
                         await _ttsService.seekToPosition(newPosition);
                       },
                       screenWidth: screenWidth,

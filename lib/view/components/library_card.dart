@@ -54,12 +54,21 @@ void initState() {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Book image
-              Image(
-                image: widget.book.bookimage,
-                height: screenHeight * 0.23,
-                width: screenWidth * 0.7,
-                fit: BoxFit.fill,
-              ),
+          widget.book.bookimageURL.startsWith('http')
+              ? Image.network(
+            widget.book.bookimageURL, // Fetch image from URL
+            height: screenHeight * 0.23,
+            width: screenWidth * 0.7,
+            fit: BoxFit.fill,
+          )
+
+              : Image.asset(
+            widget.book.bookimageURL, // Fetch image from local assets
+            height: screenHeight * 0.23,
+            width: screenWidth * 0.7,
+            fit: BoxFit.fill,
+          ),
+
               SizedBox(height: screenHeight * 0.002), // Add some space between image and text
               // Book title and bookmark in a row
               Row(

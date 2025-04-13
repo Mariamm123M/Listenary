@@ -47,7 +47,7 @@ class RecentlyCard extends StatelessWidget {
         child: Row(
           children: [
             Image(
-              image: book.bookimage,
+              image: NetworkImage(book.bookimageURL),
               height: screenWidth * 0.3,
               width: screenWidth * 0.2,
               fit: BoxFit

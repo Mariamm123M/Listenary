@@ -57,7 +57,7 @@ class BookDetailScreen extends StatelessWidget {
                       height: 268.8,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: book.bookimage,
+                          image: NetworkImage(book.bookimageURL),
                           fit: BoxFit.cover,
                         ),
                         boxShadow: [
@@ -109,13 +109,13 @@ class BookDetailScreen extends StatelessWidget {
                             horizontal: screenWidth * 0.2,
                             vertical: screenHeight * 0.015)),
                         backgroundColor:
-                            WidgetStatePropertyAll(Color(0xffFEC838)),
+                        WidgetStatePropertyAll(Color(0xffFEC838)),
                         shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(45)))),
                     onPressed: () {
                       Get.to(() => ReadingPage(
-                            book: book,
-                          ));
+                        book: book,
+                      ));
                     },
                     child: Text(
                       "Play Now",
@@ -130,7 +130,7 @@ class BookDetailScreen extends StatelessWidget {
                       height: 45, width: 45, fit: BoxFit.fill),
                   onTap: () {
                     Get.to(() => ReadingPage(
-                      documnetText : '''
+                        documnetText : '''
 --- الصفحة 1 ---   
 كانت الشمس تغرب خلف التلال حينما خطت "ليلى" أولى خطواتها في ممر الغابة. كانت أوراق الأشجار تهمس مع النسيم، والطريق أمامها يتلألأ بضوء ذهبي خافت. لم يسبق لها أن دخلت "غابة الهمسات" وحدها، ورغم أن القصص القديمة حذرت من سحرها وغموضها، فإن الفضول كان أقوى من الخوف.
 
@@ -152,8 +152,8 @@ class BookDetailScreen extends StatelessWidget {
 لم تعد الغابة تهمس. بل كانت تغني.
 '''
 
-                        //book: book,
-                        ));
+                      //book: book,
+                    ));
                   },
                 )
               ],
@@ -163,7 +163,7 @@ class BookDetailScreen extends StatelessWidget {
                   left: screenWidth * 0.035, top: screenHeight * 0.05),
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
@@ -186,7 +186,7 @@ class BookDetailScreen extends StatelessWidget {
             ),
             Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
               child: Container(
                 height: 400,
                 child: SingleChildScrollView(

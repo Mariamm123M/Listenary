@@ -140,7 +140,7 @@ class _UploadFileState extends State<UploadFile> {
                           child: Transform.rotate(
                             angle: -10.43 * 3.1416 / 180,
                             child: Image.asset(
-                              'assets/Icons/pdf.png',
+                              'assets/Icons/Pdf.png',
                               width: 30,
                               height: 30,
                             ),

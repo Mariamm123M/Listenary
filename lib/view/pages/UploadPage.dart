@@ -5,8 +5,10 @@ import 'package:listenary/services/permissions/camera_permission.dart';
 import 'package:listenary/view/pages/UploadImage.dart';
 import 'package:listenary/view/pages/UploadLink.dart';
 import 'package:listenary/view/pages/upload_text.dart';
+import 'ReadingPage.dart';
 import 'UploadFile.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 class UploadPage extends StatelessWidget {
   const UploadPage({Key? key}) : super(key: key);
@@ -16,11 +18,28 @@ class UploadPage extends StatelessWidget {
     final XFile? image = await picker.pickImage(source: ImageSource.camera);
 
     if (image != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image captured: ${image.path}')),
-      );
+      try {
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('http://192.168.1.7:5000/upload'),
+        );
+        request.files.add(await http.MultipartFile.fromPath('file', image.path));
+        var response = await request.send();
+
+        if (response.statusCode == 200) {
+          final extractedText = await response.stream.bytesToString();
+          Get.to(() => ReadingPage(documnetText: extractedText));
+        } else {
+          print('OCR failed: ${response.statusCode}');
+          Get.snackbar("Error", "Failed to extract text.");
+        }
+      } catch (e) {
+        print('Error uploading file: $e');
+        Get.snackbar("Error", "Could not connect to server.");
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

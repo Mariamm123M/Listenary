@@ -538,7 +538,7 @@ class _SpeakersState extends State<Speakers> {
       final name = speaker["name"] ?? "Speaker";
 
       final response = await http.post(
-        Uri.parse('http://192.168.1.6:5002/tts'),
+        Uri.parse('http://192.168.1.7:5002/tts'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'text': 'Hello, this is $name and I am excited to help you in your journey',
