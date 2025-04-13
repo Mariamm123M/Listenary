@@ -30,17 +30,6 @@ class BookDetailScreen extends StatelessWidget {
             ),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 5.0, top: 6.0),
-            child: SvgPicture.asset(
-              'assets/Images/volume.svg',
-              color: Colors.white,
-              width: 32,
-              height: 32,
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -130,7 +119,7 @@ class BookDetailScreen extends StatelessWidget {
                       height: 45, width: 45, fit: BoxFit.fill),
                   onTap: () {
                     Get.to(() => ReadingPage(
-                      documnetText : '''
+                      /*documnetText : '''
 --- الصفحة 1 ---   
 كانت الشمس تغرب خلف التلال حينما خطت "ليلى" أولى خطواتها في ممر الغابة. كانت أوراق الأشجار تهمس مع النسيم، والطريق أمامها يتلألأ بضوء ذهبي خافت. لم يسبق لها أن دخلت "غابة الهمسات" وحدها، ورغم أن القصص القديمة حذرت من سحرها وغموضها، فإن الفضول كان أقوى من الخوف.
 
@@ -150,9 +139,9 @@ class BookDetailScreen extends StatelessWidget {
 وحينما مدت يدها نحو الكرة، اشتدت إضاءتها، وعرضت في الهواء صورًا — جدتها شابة، تمشي بنفس الطريق، تلمس نفس الأشجار. ثم ظهرت ليلى، وخيط من نور يصل قلبها بقلب الغابة.
 
 لم تعد الغابة تهمس. بل كانت تغني.
-'''
+'''*/
 
-                        //book: book,
+                        book: book,
                         ));
                   },
                 )

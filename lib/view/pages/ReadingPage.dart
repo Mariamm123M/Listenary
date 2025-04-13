@@ -31,10 +31,13 @@ class _ReadingPageState extends State<ReadingPage> {
   final TTSService _ttsService = TTSService();
   List<String> _sentences = [];
   double _sliderValue = 0.0;
+  late final ScrollController _scrollController;
+  double scaleFactor = 1.0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _ttsService.loadVoicePreference(); // Load voice preference
     // Initialize text content
     originalText = widget.book?.bookcontent ??
@@ -44,7 +47,6 @@ class _ReadingPageState extends State<ReadingPage> {
     cleanedText = originalText.replaceAll(
         RegExp(r'[^a-zA-Z0-9\u0621-\u064A\s.,:?!]'), ' ');
     lang = detectLanguage(cleanedText);
-    print(lang);
     // Initialize the TTS service listeners
     _ttsService.onPositionChanged = (Duration position, int sentenceIndex) {
       setState(() {
@@ -54,6 +56,7 @@ class _ReadingPageState extends State<ReadingPage> {
                 : 1);
       });
     };
+    _ttsService.scrollController = _scrollController;
     // Listen for audio completion
     _ttsService.onPlayerComplete = () {
       setState(() {
@@ -61,28 +64,32 @@ class _ReadingPageState extends State<ReadingPage> {
       });
     };
   }
-String detectLanguage(String text) {
-  // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
-  final arabicRegex = RegExp(r'[\u0600-\u06FF]');
-  // Check for English letters
-  final englishRegex = RegExp(r'[a-zA-Z]');
 
-  bool hasArabic = arabicRegex.hasMatch(text);
-  bool hasEnglish = englishRegex.hasMatch(text);
+  String detectLanguage(String text) {
+    // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
+    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+    // Check for English letters
+    final englishRegex = RegExp(r'[a-zA-Z]');
 
-  if (hasArabic && !hasEnglish) {
-    return 'ar'; // Arabic text
-  } else if (hasEnglish && !hasArabic) {
-    return 'en'; // English text
-  } else if (hasArabic && hasEnglish) {
-    // Count characters to determine dominant language
-    int arabicCount = text.split('').where((c) => arabicRegex.hasMatch(c)).length;
-    int englishCount = text.split('').where((c) => englishRegex.hasMatch(c)).length;
-    return arabicCount > englishCount ? 'ar' : 'en';
-  } else {
-    return 'en'; // Default to English if no letters detected
+    bool hasArabic = arabicRegex.hasMatch(text);
+    bool hasEnglish = englishRegex.hasMatch(text);
+
+    if (hasArabic && !hasEnglish) {
+      return 'ar'; // Arabic text
+    } else if (hasEnglish && !hasArabic) {
+      return 'en'; // English text
+    } else if (hasArabic && hasEnglish) {
+      // Count characters to determine dominant language
+      int arabicCount =
+          text.split('').where((c) => arabicRegex.hasMatch(c)).length;
+      int englishCount =
+          text.split('').where((c) => englishRegex.hasMatch(c)).length;
+      return arabicCount > englishCount ? 'ar' : 'en';
+    } else {
+      return 'en'; // Default to English if no letters detected
+    }
   }
-}
+
   void _handlePlayPause() async {
     if (!_ttsService.isPlaying && _ttsService.totalDuration == Duration.zero) {
       // First time play - initialize TTS with the text
@@ -146,6 +153,7 @@ String detectLanguage(String text) {
   @override
   void dispose() {
     _ttsService.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -311,7 +319,7 @@ String detectLanguage(String text) {
         ],
       ),
       body: Directionality(
-        textDirection: lang == "en" ?TextDirection.ltr : TextDirection.rtl,
+        textDirection: lang == "en" ? TextDirection.ltr : TextDirection.rtl,
         child: GestureDetector(
           onHorizontalDragUpdate: (details) async {
             // Check if the user swipes from right to left
@@ -325,6 +333,12 @@ String detectLanguage(String text) {
                       ));
             }
           },
+          onScaleUpdate: (details) {
+            setState(() {
+              scaleFactor =
+                  details.scale.clamp(0.5, 3.0); // نحدد مدى التصغير والتكبير
+            });
+          },
           child: Stack(
             children: [
               Container(
@@ -332,7 +346,8 @@ String detectLanguage(String text) {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0),
                   child: TextDisplay(
-                    scrollController: _ttsService.scrollController,
+                    scaleFactor: scaleFactor,
+                    scrollController: _scrollController,
                     screenHeight: screenHeight,
                     screenWidth: screenWidth,
                     currentSentenceIndex: _ttsService.currentSentenceIndex,
