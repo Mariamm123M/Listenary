@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+
+import 'package:get/get_rx/get_rx.dart';
+import 'package:listenary/model/noteModel.dart';
 
 class Book {
   final int bookId;
@@ -11,6 +13,7 @@ class Book {
   final String description;
   final String? audioFilePath;
   final String bookcontent;
+  RxList<Note> notes = <Note>[].obs;    // ده زيادة محتاج يتهندل ف الباك ايند
 
   Book({
     required this.bookId,

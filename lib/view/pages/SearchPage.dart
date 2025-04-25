@@ -151,7 +151,7 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                               child: book.bookimageURL != null
                                   ? Image.network(
-                                book.bookimageURL!,
+                                book.bookimageURL,
                                 fit: BoxFit.cover,
                               )
                                   : Placeholder(), // Placeholder for missing images

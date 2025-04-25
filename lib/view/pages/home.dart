@@ -6,6 +6,7 @@ import 'package:listenary/controller/recent_books_controller.dart';
 import 'package:listenary/model/book_model.dart';
 import 'package:listenary/view/components/library_card.dart';
 import 'package:listenary/view/components/recently_card.dart';
+import 'package:listenary/view/pages/ReadingPage.dart';
 import 'package:listenary/view/pages/SearchPage.dart';
 import 'package:listenary/view/pages/profile.dart';
 import 'dart:io';
@@ -25,7 +26,26 @@ class _HomeState extends State<Home> {
 
   String name = "User";
   String? _imagePath;
+  Book book = Book(
+  booktitle: "Journey to the Deep Sea",
+  description: "An adventure book about a deep-sea exploration mission and the mysteries of the ocean...",
+  pages: 300,
+  bookcontent: '''
+    Page 1: The sky was a brilliant shade of blue, and the sun gleamed brightly over the vast expanse of the ocean. The ship set sail on its journey into the depths, where light could not reach and the human eye could not perceive the mysteries below. Onboard, a team of scientists was eager to uncover the secrets of the sea, diving into an adventure like no other. The atmosphere was filled with excitement and anticipation, as each crew member imagined what they might encounter beneath the waves.
 
+    Page 2: After hours of sailing, the ship reached the designated point for the dive. The crew prepared the submarine that would carry them into the ocean's deep. Below the surface, marine creatures moved gracefully, their vibrant colors and strange forms captivating the scientists. One of them pointed out a peculiar creature, unlike anything they'd ever seen before—part fish, part octopus. This discovery marked only the beginning of their extraordinary findings.
+
+    Page 3: As the submarine descended deeper into the abyss, the darkness became more oppressive. Yet, thanks to the bright lights aboard the vessel, the team could still see the fascinating life around them. Suddenly, a massive sea creature appeared in front of them, its size far exceeding anything they had expected. Hearts raced. Was this creature dangerous, or merely curious? Questions raced through their minds as the thrill of discovery grew stronger.
+
+    Page 4: The team decided to follow the massive creature at a safe distance, documenting its movements. It swam with a slow, deliberate grace, seemingly unbothered by the submarine. As they ventured further into the deep, strange and unfamiliar species began to appear—giant jellyfish that pulsed with light, bioluminescent fish that flickered like stars in the black waters. The mysteries of the deep continued to unfold before their eyes, and with each discovery came new questions.
+
+    Page 5: Hours passed as the submarine delved further into the ocean's depths, revealing a world that few had ever seen. The pressure outside was immense, but the crew inside remained safe, fascinated by the incredible sights before them. They encountered underwater caves, shimmering with unknown minerals, and schools of glowing fish that moved as one, creating patterns in the darkness. The adventure was far from over, but one thing was certain: the ocean held more secrets than anyone could have imagined.
+  ''',
+  rating: 4.8,
+  language: "en", 
+  bookId: 0, 
+  author: '', bookimageURL: '',
+);
   List<Book> libraryBooks = [];
   bool isLoading = true;
 
@@ -302,8 +322,7 @@ class _HomeState extends State<Home> {
   Widget searchBar(double screenWidth, double screenHeight) {
     return GestureDetector(
         onTap: () {
-          //navigate to search page
-          Get.to(() => SearchPage());
+         Get.to(() => SearchPage());
         },
         child: Container(
           decoration: BoxDecoration(

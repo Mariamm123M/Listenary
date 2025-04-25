@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class SummaryDialog extends StatefulWidget {
   final bool isDarkMode;
+  final String? initial;
 
-  SummaryDialog({required this.isDarkMode});
+  SummaryDialog({required this.isDarkMode, this.initial});
 
   @override
   _SummaryDialogState createState() => _SummaryDialogState();
@@ -46,6 +47,20 @@ class _SummaryDialogState extends State<SummaryDialog> {
 
   return importantSentences.join('. ') + '.';
 }
+@override
+void initState() {
+  super.initState();
+  if (widget.initial != null && widget.initial!.isNotEmpty) {
+    _textController.text = widget.initial!;
+    _summarizedText = summarizeText(widget.initial!);
+  }
+}
+@override
+void dispose() {
+  _textController.dispose();
+  super.dispose();
+}
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:listenary/controller/searchController.dart' as my_search;
 import 'package:listenary/model/book_model.dart';
 import 'package:listenary/services/tts/tts_service.dart';
 import 'package:listenary/view/components/SummaryDialog.dart';
 import 'package:listenary/view/components/TranslateDialog.dart';
+import 'package:listenary/view/components/comamnds.dart';
 import 'package:listenary/view/components/slider.dart';
 import 'package:listenary/view/components/font_menu.dart';
 import 'package:listenary/view/components/text_display.dart';
 import 'package:listenary/view/components/audio_box.dart';
 import 'package:listenary/view/components/ai_assistant.dart';
+import 'package:translator/translator.dart';
 
 class ReadingPage extends StatefulWidget {
   final Book? book;
@@ -31,13 +34,20 @@ class _ReadingPageState extends State<ReadingPage> {
   final TTSService _ttsService = TTSService();
   List<String> _sentences = [];
   double _sliderValue = 0.0;
-  late final ScrollController _scrollController;
   double scaleFactor = 1.0;
+  bool _isFullScreen = false;
+  late ScrollController sharedScrollController;
+  final searchController = Get.find<my_search.MySearchController>();
+  final translator = GoogleTranslator();
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    sharedScrollController = ScrollController();
+
+    // اربط TTS و Search بنفس الـ controller
+    _ttsService.scrollController = sharedScrollController;
+    searchController.attachToScrollController(sharedScrollController);
     _ttsService.loadVoicePreference(); // Load voice preference
     // Initialize text content
     originalText = widget.book?.bookcontent ??
@@ -57,7 +67,6 @@ class _ReadingPageState extends State<ReadingPage> {
                 : 1);
       });
     };
-    _ttsService.scrollController = _scrollController;
     // Listen for audio completion
     _ttsService.onPlayerComplete = () {
       setState(() {
@@ -65,6 +74,7 @@ class _ReadingPageState extends State<ReadingPage> {
       });
     };
   }
+
   String detectLanguage(String text) {
     // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
     final arabicRegex = RegExp(r'[\u0600-\u06FF]');
@@ -116,7 +126,7 @@ class _ReadingPageState extends State<ReadingPage> {
     if (text.isEmpty) return 'No text available to summarize.';
 
     List<String> sentences =
-    text.split('.').where((s) => s.trim().isNotEmpty).toList();
+        text.split('.').where((s) => s.trim().isNotEmpty).toList();
 
     Map<String, int> wordFrequency = {};
     List<String> words = text
@@ -160,7 +170,33 @@ class _ReadingPageState extends State<ReadingPage> {
   FontWeight selectedFontWeight = FontWeight.w700;
   TextDecoration selectedFontDecoration = TextDecoration.none;
   FontStyle selectedFontStyle = FontStyle.normal;
-
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    setState(() {
+      scaleFactor = details.scale;
+      if (scaleFactor > 1.5) {
+        _isFullScreen = true;
+      } else {
+        _isFullScreen = false;
+      }
+    });
+  }
+void _translateWholePage(String targetLang) async {
+    try {
+      final translation = await translator.translate(originalText, to: targetLang);
+      setState(() {
+        summarizedText = ''; // نفضي ملخص لو في
+        isSummarized = false;
+        originalText = translation.text;
+        cleanedText = translation.text;
+        _sentences = cleanedText.split(RegExp(r'(?<=[.!?])\s*'));
+      });
+    } catch (e) {
+      print("Translation failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Translation failed, try again")),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     Color backgroundColor = _isDarkMode ? Color(0xFF212E54) : Colors.white;
@@ -188,11 +224,27 @@ class _ReadingPageState extends State<ReadingPage> {
               : widget.book!.booktitle,
           style: TextStyle(
             color: _isDarkMode ? Colors.white : Color(0xFF212E54),
-            fontSize: 18,
+            fontSize: 18 * scaleFactor, // Apply the scale factor here
             fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.zoom_in),
+            onPressed: () {
+              setState(() {
+                scaleFactor += 0.1; // تكبير النص
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.zoom_out),
+            onPressed: () {
+              setState(() {
+                scaleFactor -= 0.1; // تصغير النص
+              });
+            },
+          ),
           IconButton(
             icon: SvgPicture.asset("assets/Icons/night.svg",
                 color: _isDarkMode ? Color(0xff949494) : Color(0xffFEC838),
@@ -264,9 +316,9 @@ class _ReadingPageState extends State<ReadingPage> {
                         : FontWeight.bold;
                   } else if (value == 'Underline') {
                     selectedFontDecoration =
-                    (selectedFontDecoration == TextDecoration.underline)
-                        ? TextDecoration.none
-                        : TextDecoration.underline;
+                        (selectedFontDecoration == TextDecoration.underline)
+                            ? TextDecoration.none
+                            : TextDecoration.underline;
                   } else if (value == 'Italic') {
                     selectedFontStyle = (selectedFontStyle == FontStyle.italic)
                         ? FontStyle.normal
@@ -295,7 +347,7 @@ class _ReadingPageState extends State<ReadingPage> {
                   ),
                   PopupMenuItem(
                     child: Text('Translate the whole page'),
-                    value: 'translate_page',
+                    value: 'translateText',
                   ),
                 ],
               ).then((value) {
@@ -306,11 +358,49 @@ class _ReadingPageState extends State<ReadingPage> {
                       return TranslateDialog(isDarkMode: _isDarkMode);
                     },
                   );
-                } else if (value == 'translate_page') {
-                  /*Get.to(()=>TranslatedPage(
-                                                bookContent: widget.book.bookcontent,
-                                                isDarkMode: false,
-                                            ),);*/
+                } else if (value == 'translateText') {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      String? selectedLangCode;
+
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return AlertDialog(
+                            title: Text("Select a language"),
+                            content: DropdownButton<String>(
+                              value: selectedLangCode,
+                              hint: Text("Choose language"),
+                              items: [
+                                DropdownMenuItem(
+                                    value: 'en', child: Text("English")),
+                                DropdownMenuItem(
+                                    value: 'ar', child: Text("Arabic")),
+                                DropdownMenuItem(
+                                    value: 'fr', child: Text("French")),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedLangCode = value!;
+                                });
+                              },
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  if (selectedLangCode != null) {
+                                    Get.back();
+                                    _translateWholePage(selectedLangCode!);
+                                  }
+                                },
+                                child: Text("Translate"),
+                              )
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
                 }
               });
             },
@@ -323,13 +413,17 @@ class _ReadingPageState extends State<ReadingPage> {
           onHorizontalDragUpdate: (details) async {
             // Check if the user swipes from right to left
             if (details.delta.dx < -10) {
+              await Get.dialog(CommandsHelpDialog());
               await showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
                   builder: (context) => AiAssistant(
-                    screenHeight: screenHeight,
-                    screenWidth: screenWidth,
-                  ));
+                        currentSentenceIndex: _ttsService.currentSentenceIndex,
+                        book: widget.book,
+                        sentences: _sentences,
+                        screenHeight: screenHeight,
+                        screenWidth: screenWidth,
+                      ));
             }
           },
           onScaleUpdate: (details) {
@@ -345,12 +439,13 @@ class _ReadingPageState extends State<ReadingPage> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0),
                   child: TextDisplay(
+                    book: widget.book,
                     scaleFactor: scaleFactor,
-                    scrollController: _scrollController,
+                    scrollController: sharedScrollController,
                     screenHeight: screenHeight,
                     screenWidth: screenWidth,
                     currentSentenceIndex: _ttsService.currentSentenceIndex,
-                    sentences: _sentences,
+                    sentences: isSummarized ? summarizedText.split(RegExp(r'(?<=[.!?])\s*')) : _sentences,
                     selectedFontDecoration: selectedFontDecoration,
                     selectedFontFamily: selectedFontFamily,
                     selectedFontStyle: selectedFontStyle,
@@ -379,8 +474,8 @@ class _ReadingPageState extends State<ReadingPage> {
                       totalDuration: _ttsService.totalDuration,
                       onSliderChanged: (value) async {
                         int newPosition =
-                        (value * _ttsService.totalDuration.inMilliseconds)
-                            .toInt();
+                            (value * _ttsService.totalDuration.inMilliseconds)
+                                .toInt();
                         await _ttsService.seekToPosition(newPosition);
                       },
                       screenWidth: screenWidth,

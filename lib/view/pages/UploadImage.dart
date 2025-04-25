@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -112,8 +113,8 @@ class _UploadImageState extends State<UploadImage> {
                         right: 0,
                         child: Align(
                           alignment: Alignment.center,
-                          child: Image.asset(
-                            'assets/Icons/cloud.png',
+                          child: SvgPicture.asset(
+                            'assets/Icons/cloud.svg',
                             width: 150,
                             height: 150,
                           ),

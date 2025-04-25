@@ -159,6 +159,7 @@ class _ProfileState extends State<Profile> {
     final screenWidth = mediaQuery.size.width;
 
     return Drawer(
+      width: screenWidth * 0.55,
       child: Padding(
         padding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.025, vertical: screenHeight * 0.07),

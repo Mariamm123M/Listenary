@@ -3,8 +3,9 @@ import 'package:translator/translator.dart';
 
 class TranslateDialog extends StatefulWidget {
   final bool isDarkMode;
+  final String? initial;
 
-  const TranslateDialog({Key? key, required this.isDarkMode}) : super(key: key);
+  const TranslateDialog({Key? key, required this.isDarkMode, this.initial}) : super(key: key);
 
   @override
   _TranslateDialogState createState() => _TranslateDialogState();
@@ -51,6 +52,19 @@ class _TranslateDialogState extends State<TranslateDialog> {
       }
     }
   }
+@override
+void initState() {
+  super.initState();
+  if (widget.initial != null && widget.initial!.isNotEmpty) {
+    _textController.text = widget.initial!;
+    _translateText();
+  }
+}
+@override
+void dispose() {
+  _textController.dispose();
+  super.dispose();
+}
 
   @override
   Widget build(BuildContext context) {

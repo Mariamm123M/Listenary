@@ -139,8 +139,8 @@ class _UploadFileState extends State<UploadFile> {
                           opacity: 1,
                           child: Transform.rotate(
                             angle: -10.43 * 3.1416 / 180,
-                            child: Image.asset(
-                              'assets/Icons/Pdf.png',
+                            child: SvgPicture.asset(
+                              'assets/Icons/Pdf.svg',
                               width: 30,
                               height: 30,
                             ),

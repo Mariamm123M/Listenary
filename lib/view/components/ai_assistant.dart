@@ -1,12 +1,10 @@
-import 'dart:io';
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:listenary/model/book_model.dart';
+import 'package:listenary/services/aiService.dart/aiResponse.dart';
+import 'package:listenary/view/components/definition_overlay.dart';
 import 'package:lottie/lottie.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:http/http.dart' as http;
-import 'package:get/get.dart';
 
 import 'package:listenary/view/components/animation.dart';
 import 'package:listenary/services/tts/flutter_tts.dart';
@@ -15,8 +13,12 @@ import 'package:listenary/services/permissions/microphone_permission.dart';
 class AiAssistant extends StatefulWidget {
   final double screenHeight;
   final double screenWidth;
+  final List<String> sentences;
+  final Book? book;
+  final int currentSentenceIndex;
+  
   const AiAssistant(
-      {super.key, required this.screenHeight, required this.screenWidth});
+      {super.key, required this.screenHeight, required this.screenWidth, required this.sentences,this.book, required this.currentSentenceIndex});
 
   @override
   _AiAssistantState createState() => _AiAssistantState();
@@ -33,6 +35,7 @@ class _AiAssistantState extends State<AiAssistant>
   String _aiResponse = '';
   String _detectedCommand = '';
   String lang = "en-US";
+  String selectedLang = "en";
   List<Color> colors = [
     Color(0xff5356FF),
     Color(0xff3572EF),
@@ -43,11 +46,17 @@ class _AiAssistantState extends State<AiAssistant>
   final FTTSService _fttsService = FTTSService();
   bool _showResponse = false;
   bool _showCommand = false;
+  bool isLoading = false;
   Timer? _hideTimer;
+  late Offset tapPosition;
+  final DefinitionOverlayController overlayController =
+      DefinitionOverlayController();
 
   @override
   void initState() {
     super.initState();
+    tapPosition = Offset(widget.screenWidth / 2, widget.screenHeight / 2);
+
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -73,86 +82,58 @@ class _AiAssistantState extends State<AiAssistant>
     super.dispose();
   }
 
-  Future<void> sendToAi(String userInput) async {
-  final url = Uri.parse('http://192.168.1.6:5000/process_speech');
+  Future<void> sendToAi() async {
+    final result = AiResponse.process(_text, lang); // استخدم AiResponse مباشرة
 
-  try {
-    _hideTimer?.cancel();
+    if (result.isCommand) {
+      _detectedCommand = result.command ?? "No command detected";
+      _aiResponse = result.predefinedResponse ?? "No response generated";
+      _showResponse = true; // إظهار الرد فورًا بعد جلبه
+      await Future.delayed(Duration(seconds: 1));
 
-    setState(() {
-      _showResponse = false;
-      _showCommand = false;
-      _aiResponse = '';
-      _detectedCommand = '';
-    });
+      print("Command: ${result.command}");
+      print("Argument: ${result.argument}");
+      print("Predefined Response: ${result.predefinedResponse}");
 
-    final response = await http
-        .post(
-          url,
-          body: json.encode({'speech': userInput, "lang": lang}),
-        )
-        .timeout(Duration(seconds: 10));
+      // تقريه بالـ TTS
+      _fttsService.speak(_aiResponse);
+      await Future.delayed(Duration(seconds: 2));
+      await result.executeCommand(
+        currentSentenceIndex: widget.currentSentenceIndex,
+        book: widget.book,
+        context: context,
+        sentences: widget.sentences,
+        tapPosition: tapPosition,
+        screenHeight: widget.screenHeight,
+        screenWidth: widget.screenWidth,
+        selectedLang: selectedLang,
+        setLoading: (val) {
+          setState(() {
+            isLoading = val;
+          });
+        },
+      );
+      await Future.delayed(Duration(seconds: 3));
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
       setState(() {
-        _detectedCommand = data['command'] ?? "No command detected";
-        _aiResponse = data['response'] ?? "No response generated";
-        _showResponse = true; // إظهار الرد فورًا بعد جلبه
+        isRecording = false;
+        _isListening = false;
       });
+    } else {
+      print("No command detected");
 
-      if (_detectedCommand.isNotEmpty &&
-          _detectedCommand != "No command detected") {
-        _executeCommand(_detectedCommand);
-      }
+      _aiResponse = "Sorry, I couldn't detect any command in your speech.";
+      _showResponse = true;
+      _fttsService.speak(_aiResponse);
 
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(Duration(seconds: 3));
 
-      if (mounted) {
-        setState(() {
-          isRecording = false;
-          _isListening = false;
-        });
-      }
-
-      // تشغيل الصوت وانتظار انتهاءه
-      if (_aiResponse.isNotEmpty) {
-        try {
-          await _fttsService.speak(_aiResponse); // انتظار انتهاء تشغيل الصوت
-
-          // بعد انتهاء الصوت، أغلق المودال بعد 3 ثوانٍ
-          if (mounted) {
-            _hideTimer = Timer(Duration(seconds: 3), () {
-              if (mounted) {
-                setState(() {
-                  _showResponse = false;
-                });
-                Get.back();
-              }
-            });
-          }
-        } catch (e) {
-          print("TTS Error: $e");
-        }
-      }
+      setState(() {
+        isRecording = false;
+        _isListening = false;
+      });
     }
-  } on TimeoutException {
-    setState(() {
-      _aiResponse = 'Error: Request timed out';
-      _showResponse = true;
-    });
-  } on SocketException {
-    setState(() {
-      _aiResponse = 'Error: No internet connection';
-      _showResponse = true;
-    });
-  } catch (e) {
-    setState(() {
-      _aiResponse = 'Error: ${e.toString()}';
-      _showResponse = true;
-    });
   }
-}
 
   Future<void> listen() async {
     if (await checkMicrophonePermission()) {
@@ -169,7 +150,8 @@ class _AiAssistantState extends State<AiAssistant>
             _showCommand = false;
           });
 
-          Timer(Duration(seconds: 3), () {
+          // Auto stop after 5 seconds if no speech detected
+          Timer(Duration(seconds: 5), () {
             if (_text.isEmpty && mounted) {
               _speech.stop();
               setState(() {
@@ -180,21 +162,48 @@ class _AiAssistantState extends State<AiAssistant>
           });
 
           _speech.listen(
-            onResult: (val) => setState(() {
-              _text = val.recognizedWords;
-              if (_text.isNotEmpty) {
-                if (_text.split(' ').length <= 3) {
-                  sendToAi(_text.toLowerCase());
-                } else {
+            onResult: (val) {
+              if (val.finalResult) {
+                setState(() {
+                  _text = val.recognizedWords;
+                });
+
+                if (_text.isNotEmpty) {
+                  List<String> words = _text.split(' ');
+                  if (words.length == 1 && words[0].toLowerCase() == "translate") {
                   setState(() {
-                    _aiResponse = "Please speak only 3 words or fewer.";
-                    isRecording = false;
-                    _isListening = false;
-                    _showResponse = true;
+                    _text = "translate"; // تأكيد الأمر
                   });
+                  sendToAi(); // تنفيذ الأمر مباشرة
+                } 
+                if (words.length == 1 && words[0].toLowerCase() == "summarize") {
+                  setState(() {
+                    _text = "summarize"; // تأكيد الأمر
+                  });
+                  sendToAi(); // تنفيذ الأمر مباشرة
+                } 
+                  else if (words.length <= 3) {
+                    sendToAi(); // ✅ Execute once, only when result is final
+                  } else {
+                    // Display message when more than 2 words are detected
+                    setState(() {
+                      _aiResponse =
+                          "Please speak only 2 words or fewer, not ${words.length} words.";
+                      _fttsService.speak(_aiResponse);
+                      _showResponse = true;
+                    });
+                    Future.delayed(Duration(seconds: 5), () {
+                      setState(() {
+                        _aiResponse = "";
+                        // Clear message after a while
+                        isRecording = false;
+                        _isListening = false;
+                      });
+                    });
+                  }
                 }
               }
-            }),
+            },
             localeId: lang,
           );
         } else {
@@ -206,6 +215,7 @@ class _AiAssistantState extends State<AiAssistant>
           });
         }
       } else {
+        // If already recording, stop it
         setState(() {
           isRecording = false;
           _isListening = false;
@@ -217,11 +227,6 @@ class _AiAssistantState extends State<AiAssistant>
         isRecording = false;
       });
     }
-  }
-
-  void _executeCommand(String command) async {
-    Get.back();
-    print("Executing command: $command");
   }
 
   @override
@@ -284,7 +289,7 @@ class _AiAssistantState extends State<AiAssistant>
                               children: List.generate(
                                   10,
                                   (index) => VisualComponent(
-                                     width: 10,
+                                      width: 10,
                                       duration: duration[index % 5],
                                       color: colors[index % 3])),
                             ),
@@ -345,7 +350,11 @@ class _AiAssistantState extends State<AiAssistant>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.mic, color: Color(0xFF212E54)),
+                          Icon(
+                            Icons.mic,
+                            color: Color(0xFF212E54),
+                            size: widget.screenWidth * 0.04,
+                          ),
                           SizedBox(width: widget.screenWidth * 0.01),
                           Text(
                             "Start Listening",
