@@ -13,6 +13,7 @@ class Book {
   final String description;
   final String? audioFilePath;
   final String bookcontent;
+  final String category;
   RxList<Note> notes = <Note>[].obs;    // ده زيادة محتاج يتهندل ف الباك ايند
 
   Book({
@@ -26,21 +27,24 @@ class Book {
     required this.description,
     this.audioFilePath,
     required this.bookcontent,
+    required this.category,
   });
 
   // ✅ FIXED: updated the mapping to match MySQL attributes
   factory Book.fromJson(Map<String, dynamic> json) {
-    return Book(
-      bookId: json['BookID'] ?? 0,  // Assuming BookID is an integer in the response
-      booktitle: json['Title'] ?? '',
-      author: json['Author'] ?? '',
-      bookimageURL: json['image_url'] ?? '',  // Assuming this is part of the response from the backend
-      rating: (json['Rating'] ?? 0).toDouble(),
-      pages: json['Pages'] ?? 0,
-      language: json['Language'] ?? '',
-      description: json['Description'] ?? '',
-      bookcontent: json['Content'] ?? '',  // Assuming 'Content' is part of the response for book content
-      audioFilePath: json['audioFilePath'],  // optional, based on backend response
-    );
-  }
+  return Book(
+    bookId: json['BookID'] ?? 0,
+    booktitle: json['Title'] ?? '',
+    author: json['Author'] ?? '',
+    bookimageURL: json['bookImageUrl'] ?? '',  // ✅ FIXED here
+    rating: (json['Rating'] ?? 0).toDouble(),
+    pages: json['Pages'] ?? 0,
+    language: json['Language'] ?? '',
+    description: json['Description'] ?? '',
+    bookcontent: json['Content'] ?? '',
+    audioFilePath: json['audioFilePath'],
+    category: json['Category'] ?? '',
+  );
+}
+
 }

@@ -1,28 +1,49 @@
 from pymongo import MongoClient
 import mysql.connector
+import os
+import shutil
 
 # Connect to MongoDB
-mongo_client = MongoClient("mongodb://localhost:27017/")
-mongo_db = mongo_client["listenary"]
+mongo_client = MongoClient("mongodb+srv://mariamsalah0312:mariam%402003@listenary.h2iywhc.mongodb.net/test")
+mongo_db = mongo_client["Listenary"]
 book_collection = mongo_db["books"]
 
 # Connect to MySQL
 mysql_conn = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="M@ri@m_2003",
+    password="WJ28@krhps",
     database="listenary",
     charset="utf8mb4"
 )
 mysql_cursor = mysql_conn.cursor()
 
-# Function to insert book content + metadata
-def insert_book_from_txt(txt_path, title, author, category, description, language, pages, rating, image_url):
+# Helper: Copy image to static folder and return the public URL
+def copy_image_to_static(original_path):
+    static_folder = os.path.join(os.getcwd(), "static")  # assumes script runs from project root
+    os.makedirs(static_folder, exist_ok=True)
+    
+    filename = os.path.basename(original_path)
+    target_path = os.path.join(static_folder, filename)
+    
+    # Only copy if not already present
+    if not os.path.exists(target_path):
+        shutil.copyfile(original_path, target_path)
+
+    # Return the URL that the Flutter app can use
+    return f"http://127.0.0.1:5000/static/{filename}"
+
+# Function to insert book content and metadata
+def insert_book_from_txt(txt_path, title, author, category, description, language, pages, rating, image_path):
     try:
-        with open(txt_path, 'r', encoding='utf-8') as file:
+        # Read the .txt book content
+        with open(txt_path, 'r', encoding='utf-8', errors='ignore') as file:
             text_content = file.read()
 
-        # Insert content into MongoDB
+        # Copy image and generate public URL
+        image_url = copy_image_to_static(image_path)
+
+        # Insert book content into MongoDB
         book_doc = {
             "Title": title,
             "Author": author,
@@ -31,7 +52,8 @@ def insert_book_from_txt(txt_path, title, author, category, description, languag
             "Language": language,
             "Pages": pages,
             "Rating": rating,
-            "Content": text_content
+            "Content": text_content,
+            "bookImageUrl": image_url 
         }
         mongo_result = book_collection.insert_one(book_doc)
         mongo_id = str(mongo_result.inserted_id)
@@ -61,6 +83,6 @@ if __name__ == "__main__":
     language = input("Enter the language: ")
     pages = int(input("Enter number of pages: "))
     rating = float(input("Enter the rating (0-5): "))
-    image_url = input("Enter image URL: ")
+    image_path = input("Enter full path to the image (e.g., F:\\...\\elayam.png): ")
 
-    insert_book_from_txt(txt_path, title, author, category, description, language, pages, rating, image_url)
+    insert_book_from_txt(txt_path, title, author, category, description, language, pages, rating, image_path)

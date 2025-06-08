@@ -4,19 +4,19 @@ import mysql.connector
 from bson import ObjectId
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
 # Connect to MongoDB
-mongo_client = MongoClient("mongodb://localhost:27017/")
-mongo_db = mongo_client["listenary"]
+mongo_client = MongoClient("mongodb+srv://mariamsalah0312:mariam%402003@listenary.h2iywhc.mongodb.net/test")
+mongo_db = mongo_client["Listenary"]
 book_collection = mongo_db["books"]
 
 # Connect to MySQL
 mysql_conn = mysql.connector.connect(
     host="localhost",
-    password="M@ri@m_2003",
     user="root",
+    password="WJ28@krhps",
     database="listenary"
 )
 mysql_cursor = mysql_conn.cursor()
@@ -28,11 +28,13 @@ def get_books():
         "_id": 1,
         "Title": 1,
         "Author": 1,
+        "Category": 1,
         "Description": 1,
         "Pages": 1,
         "Language": 1,
         "Rating": 1,
-        "Content": 1,   # Assuming you also store rating in MongoDB
+        "Content": 1, 
+        "bookImageUrl": 1,  # Assuming you also store rating in MongoDB
     }))
     
     # Convert ObjectId to string and add the fields to the response
@@ -44,6 +46,8 @@ def get_books():
         book['Language'] = book.get('Language', '')
         book['Rating'] = book.get('Rating', 0.0)
         book['Content'] = book.get('Content', '')
+        book['Category'] = book.get('Category', '')
+        book['bookImageUrl'] = book.get('bookImageUrl', '') 
 
     return jsonify(books)
 
