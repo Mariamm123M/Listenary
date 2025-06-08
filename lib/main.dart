@@ -13,13 +13,16 @@ import 'package:listenary/view/pages/settings.dart';
 import 'package:listenary/view/pages/signup.dart' as signup_page;
 import 'package:listenary/view/pages/splash_Screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
-  // debugPaintSizeEnabled = true;
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,  // Ensure this is set
+  );
   runApp(MyApp());
 }
+
 
 //File? imageFile
 class MyApp extends StatelessWidget {
