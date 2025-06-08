@@ -12,7 +12,7 @@ class DefinitionOverlayController {
     required double screenHeight,
     required String cleanedWord,
     required List<String> definitions,
-    required String selectedLang,
+    required String wordLang,
     required String selectedFontFamily,
     required VoidCallback onDismiss,
   }) {
@@ -64,7 +64,7 @@ class DefinitionOverlayController {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "$cleanedWord :",
+                      "${cleanedWord.replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), '')} :",
                       style: TextStyle(
                         fontFamily: selectedFontFamily,
                         fontSize: screenHeight * 0.023,
@@ -78,7 +78,8 @@ class DefinitionOverlayController {
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.black),
                                 strokeWidth: 3,
                               ),
                             ),
@@ -88,17 +89,23 @@ class DefinitionOverlayController {
                                 .map((def) => Padding(
                                       padding: const EdgeInsets.only(top: 6),
                                       child: Row(
-                                        textDirection: selectedLang == "en"
+                                        textDirection: wordLang == "en"
                                             ? TextDirection.ltr
                                             : TextDirection.rtl,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Text("• ", style: TextStyle(fontSize: screenWidth * 0.023, fontFamily: selectedFontFamily, fontWeight: FontWeight.bold)),
+                                          Text("• ",
+                                              style: TextStyle(
+                                                  fontSize: screenWidth * 0.023,
+                                                  fontFamily:
+                                                      selectedFontFamily,
+                                                  fontWeight: FontWeight.bold)),
                                           SizedBox(width: 4),
                                           Expanded(
                                             child: Text(
                                               def,
-                                              textAlign: selectedLang == "en"
+                                              textAlign: wordLang == "en"
                                                   ? TextAlign.left
                                                   : TextAlign.right,
                                               style: TextStyle(

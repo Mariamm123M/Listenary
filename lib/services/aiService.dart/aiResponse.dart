@@ -15,7 +15,7 @@ class AiResponse {
   final String? argument;
   final String? predefinedResponse;
   final bool isCommand;
-  final String lang = "en";
+  //final String lang = "en";
   final DefinitionOverlayController overlayController =
       DefinitionOverlayController();
   final highlightController = Get.find<HighlightController>();
@@ -37,17 +37,7 @@ class AiResponse {
       "translate",
       "summarize",
     ],
-    "ar-AR": [
-      "توقف",
-      "استأنف",
-      "ترجم",
-      "لخص",
-      "إيقاف",
-      "زِد السرعة",
-      "أبطئ",
-      "احفظ علامة",
-      "عرف"
-    ]
+    "ar-AR": ["اعرض", "ترجم", "عرف", "لخص", "ابحث"]
   };
 
   static Map<String, Map<String, String>> predefinedResponses = {
@@ -55,24 +45,15 @@ class AiResponse {
       "define": " i got it let's find the definition",
       "find": "i got it let's find it",
       "show": "i got it let's find your notes",
-      "pause": "Pausing the playback",
-      "resume": "Resuming the playback",
       "translate": "Starting translation",
       "summarize": "Summarizing the content",
-      "stop": "Stopping the playback",
-      "increase speed": "Increasing playback speed",
-      "slow down": "Slowing down playback speed.",
-      "bookmark": "Bookmark added",
     },
     "ar-AR": {
-      "توقف": "تم إيقاف التشغيل",
-      "استأنف": "تم استئناف التشغيل",
+      "عرف": "جارٍ تعريف الكلمة",
       "ترجم": "جارٍ بدء الترجمة",
       "لخص": "جارٍ تلخيص المحتوى",
-      "إيقاف": "تم إيقاف التشغيل",
-      "زِد السرعة": "جارٍ زيادة سرعة التشغيل.",
-      "أبطئ": "جارٍ تخفيض سرعة التشغيل",
-      "احفظ علامة": "تمت إضافة علامة مرجعية"
+      "اعرض": "جارٍ عرض ملاحظاتك",
+      "ابحث": "سيتم البحث اللآن"
     }
   };
 
@@ -106,21 +87,14 @@ class AiResponse {
     required Offset tapPosition,
     required double screenHeight,
     required double screenWidth,
-    required String selectedLang,
     required void Function(bool) setLoading,
     required List<String> sentences,
     required int currentSentenceIndex,
     Book? book,
   }) async {
     switch (command) {
-      case "define":
-        if (argument == null || argument!.isEmpty) {
-          predefinedResponses["en-US"]?["define"] = "Sorry i can't get it";
-          print("Sorry i can't get it");
-          return;
-        }
+      case "define" || "عرف":
         setLoading(true);
-
         overlayController.show(
           context: context,
           isLoading: true,
@@ -130,18 +104,19 @@ class AiResponse {
           cleanedWord: argument!,
           definitions: [],
           selectedFontFamily: "Inter",
-          selectedLang: selectedLang,
+          wordLang: isArabic(argument!),
           onDismiss: () {
             setLoading(false);
           },
         );
 
         final fetchedDefinitions =
-            await fetchDefinition(argument!, selectedLang: selectedLang);
+            await fetchDefinition(argument!, wordLang: isArabic(argument!));
         setLoading(false);
         overlayController.dismiss();
 
         overlayController.show(
+          wordLang: isArabic(argument!),
           context: context,
           isLoading: false,
           position: tapPosition,
@@ -150,37 +125,40 @@ class AiResponse {
           cleanedWord: argument!,
           definitions: fetchedDefinitions,
           selectedFontFamily: "Inter",
-          selectedLang: selectedLang,
           onDismiss: () {},
         );
-      case "find":
-        if (argument == null || argument!.isEmpty) {
-          predefinedResponses["en-US"]?["find"] = "Sorry i can't get it";
-          print("Sorry i can't get it");
-          return;
-        }
+        break;
+      case "find" || "ابحث":
         Get.back();
+        if (searchController.isSearching.value) searchController.close();
         searchController.isSearching.value = true;
         searchController.initializeSearch(sentences);
         searchController.updateSearchTerm(argument!);
         highlightController.updateHighlight(argument!);
-
         print("search for {$argument}");
         break;
-      case "show":
+      case "show" || "اعرض":
         Get.dialog(
           NotesDialog(book: book, screenWidth: screenWidth),
         );
-        print(mynoteController.temporaryNotes);
-        case "summarize":
+        break;
+      case "summarize" || "لخص":
+        Get.dialog(SummaryDialog(
+          isDarkMode: true,
+          initial: sentences[1],
+        ));
+        break;
+      case "translate" || "ترجم":
         Get.dialog(
-          SummaryDialog(isDarkMode: true,initial: sentences[1],)
-        );
-        case "translate":
-        Get.dialog(
-          TranslateDialog(isDarkMode: true,initial: sentences[currentSentenceIndex],),
+          TranslateDialog(
+            isDarkMode: true,
+            initial: sentences[currentSentenceIndex],
+            fromLanguage: detectLanguage(sentences[currentSentenceIndex]) == "en"? "English" : "Arabic",
+            toLanguage: detectLanguage(sentences[currentSentenceIndex]) == "en"? "Arabic" : "English",
+          ),
           barrierDismissible: true,
         );
+        break;
       default:
         print("Unknown or unsupported command");
         Get.back();

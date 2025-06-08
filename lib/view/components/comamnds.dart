@@ -25,19 +25,19 @@ class CommandsHelpDialog extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.04, vertical: screenHeight * 0.06),
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.8),
+        constraints: BoxConstraints(maxHeight: screenHeight * 1.5, maxWidth: screenWidth * 1.5),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               "Voice Commands You Can Use",
               style: TextStyle(
-                fontSize: screenWidth * 0.025,
+                fontSize: screenWidth * 0.03,
                 fontWeight: FontWeight.bold,
                 color: Color(0xff212E54),
               ),
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: screenHeight * 0.01),
             Expanded(
               child: ListView.separated(
                 itemCount: commandsWithDescription.length,
@@ -49,7 +49,7 @@ class CommandsHelpDialog extends StatelessWidget {
                     title: Text(
                       key,
                       style: TextStyle(
-                        fontSize: screenWidth * 0.023,
+                        fontSize: screenWidth * 0.035,
                         color: Colors.black,
                         fontWeight: FontWeight.w600,
                       ),
@@ -57,7 +57,7 @@ class CommandsHelpDialog extends StatelessWidget {
                     subtitle: Text(
                       value,
                       style: TextStyle(
-                        fontSize: screenWidth * 0.02,
+                        fontSize: screenWidth * 0.03,
                         color: Colors.grey[700],
                       ),
                     ),
@@ -65,7 +65,7 @@ class CommandsHelpDialog extends StatelessWidget {
                       icon: Icon(
                         Icons.volume_up,
                         color: Colors.blue,
-                        size: screenWidth * 0.045,
+                        size: screenWidth * 0.07
                       ),
                       onPressed: () async {
                         await _flutterTts.speak(key);
@@ -81,7 +81,7 @@ class CommandsHelpDialog extends StatelessWidget {
               onPressed: () => Get.back(),
               child: Text("Close",
                   style: TextStyle(
-                      fontSize: screenWidth * 0.025, color: Colors.amber)),
+                      fontSize: screenWidth * 0.03, color: Colors.amber, fontWeight: FontWeight.bold)),
             )
           ],
         ),

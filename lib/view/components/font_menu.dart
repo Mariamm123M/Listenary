@@ -39,6 +39,14 @@ void showFontMenu(BuildContext context, Function(String?) onSelected) {
         value: 'Italic',
         child: Text('Italic', style: TextStyle(fontStyle: FontStyle.italic)),
       ),
+      PopupMenuItem<String>(
+        enabled: false,
+        child: Divider(),
+      ),
+      PopupMenuItem<String>(
+        value: 'Back to normal',
+        child: Text('Back to normal', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.normal)),
+      ),
     ],
   ).then((value) {
     onSelected(value); // نمرر القيمة المختارة من هنا

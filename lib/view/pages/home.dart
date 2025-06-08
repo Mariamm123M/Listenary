@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/controller/recent_books_controller.dart';
 import 'package:listenary/model/book_model.dart';
 import 'package:listenary/view/components/library_card.dart';
 import 'package:listenary/view/components/recently_card.dart';
+import 'package:listenary/view/components/chracters_dialog.dart';
 import 'package:listenary/view/pages/ReadingPage.dart';
-import 'package:listenary/view/pages/SearchPage.dart';
+import 'package:listenary/view/pages/chatBot.dart';
 import 'package:listenary/view/pages/profile.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -27,32 +29,136 @@ class _HomeState extends State<Home> {
   String name = "User";
   String? _imagePath;
   Book book = Book(
-  booktitle: "Journey to the Deep Sea",
-  description: "An adventure book about a deep-sea exploration mission and the mysteries of the ocean...",
-  pages: 300,
-  bookcontent: '''
-    Page 1: The sky was a brilliant shade of blue, and the sun gleamed brightly over the vast expanse of the ocean. The ship set sail on its journey into the depths, where light could not reach and the human eye could not perceive the mysteries below. Onboard, a team of scientists was eager to uncover the secrets of the sea, diving into an adventure like no other. The atmosphere was filled with excitement and anticipation, as each crew member imagined what they might encounter beneath the waves.
+    booktitle: "Journey to the Deep Sea",
+    description:
+        "An adventure book about a deep-sea exploration mission and the mysteries of the ocean...",
+    pages: 300,
+    bookcontent: '''
+  
 
-    Page 2: After hours of sailing, the ship reached the designated point for the dive. The crew prepared the submarine that would carry them into the ocean's deep. Below the surface, marine creatures moved gracefully, their vibrant colors and strange forms captivating the scientists. One of them pointed out a peculiar creature, unlike anything they'd ever seen before—part fish, part octopus. This discovery marked only the beginning of their extraordinary findings.
+**Black** is not just a color; it is a powerful statement that has influenced art, fashion, psychology, and even history itself. From the earliest civilizations, black was associated with the unknown, the night sky, and the deep mysteries of the universe. Ancient Egyptians used black to symbolize fertility and rebirth because of the rich, black soil left behind after the Nile flooded.
 
-    Page 3: As the submarine descended deeper into the abyss, the darkness became more oppressive. Yet, thanks to the bright lights aboard the vessel, the team could still see the fascinating life around them. Suddenly, a massive sea creature appeared in front of them, its size far exceeding anything they had expected. Hearts raced. Was this creature dangerous, or merely curious? Questions raced through their minds as the thrill of discovery grew stronger.
+In the world of fashion, black represents sophistication, elegance, and authority. A black suit or a little black dress is considered timeless and appropriate for almost any occasion. Designers often favor black because it provides a neutral background that highlights form, texture, and innovation.
 
-    Page 4: The team decided to follow the massive creature at a safe distance, documenting its movements. It swam with a slow, deliberate grace, seemingly unbothered by the submarine. As they ventured further into the deep, strange and unfamiliar species began to appear—giant jellyfish that pulsed with light, bioluminescent fish that flickered like stars in the black waters. The mysteries of the deep continued to unfold before their eyes, and with each discovery came new questions.
+Psychologically, black can evoke a wide range of emotions. It can convey a sense of power, control, and independence, but also sorrow and mourning. In many cultures, people wear black during times of grief, reflecting the solemn respect for those who have passed away. Yet in other settings, black attire can project confidence and strength.
 
-    Page 5: Hours passed as the submarine delved further into the ocean's depths, revealing a world that few had ever seen. The pressure outside was immense, but the crew inside remained safe, fascinated by the incredible sights before them. They encountered underwater caves, shimmering with unknown minerals, and schools of glowing fish that moved as one, creating patterns in the darkness. The adventure was far from over, but one thing was certain: the ocean held more secrets than anyone could have imagined.
+Artists throughout history have understood the emotional weight of black. Renaissance painters used black to create dramatic contrasts known as chiaroscuro, highlighting light and shadow in their masterpieces. Modern artists like Kazimir Malevich pushed the limits of abstraction with works like "Black Square," where black became the subject itself rather than the background.
+
+In literature and film, black often represents the unknown or the sinister. A villain cloaked in black or a dark, abandoned house painted in shades of black immediately sets a chilling tone. Yet, it is important to note that black does not always signify evil — it can also represent protection, mystery, and infinite possibilities.
+
+In nature, black appears in many powerful forms: the glossy feathers of a raven, the volcanic stones of a lava field, the depths of the ocean. These natural examples show that black is far from empty; it is full of texture, movement, and life.
+
+Technology and modern branding have also embraced black for its sleek, minimalist appeal. Many tech companies design their products in black to suggest high-end quality and futuristic design. Black cars, black smartphones, black clothing — all signal a sense of luxury and cutting-edge style.
+
+Ultimately, black is a color of contradictions. It is both the absence of light and a canvas for endless creation. It can represent mourning or celebration, simplicity or complexity, fear or empowerment. No matter where we encounter it — in the natural world, in culture, or in our daily lives — **black** leaves an undeniable impact.
+
   ''',
+    rating: 4.8,
+    language: "en",
+    bookId: 0,
+    author: '',
+    bookimageURL: '',
+  );
+  Book book2 = Book(
+    booktitle: "عربي",
+    description:
+        "An adventure book about a deep-sea exploration mission and the mysteries of the ocean...",
+    pages: 300,
+    bookcontent: '''
+  
+
+لماذا نفتقد المراجع الأكاديمية في المواضيع العلمية باللغة العربية؟ لماذا نفتقد المسؤولية الجماعية أو الرسمية إزاء اللغة العربية؟ من هنا أصل إلى نقطة هامة ، وفي تقديري هي جوهر المسألة : وهي أننا – عامةً – لا نوقّـر لغتنا ، ولا نجلّ أربابها بما يليقون به ، فقد نسمع اللفظ الهزيل الكليل ، وقد نسمع اللاحن تلو اللاحن ( وانتبه في حفلات التأبين – مثلاً ) ، ونمر على ذلك مر الكرام ....بل قد نجد بيننا من يسخر منك إن حاولت أن تنقد لغة هذا الزعيم أو ذاك ، فتصبح أنت الهُـزْأة ، فالسياسيون وشخصيات المجتمع أهم من اللغة وإعرابها... ولا غرابة إذا رأينا - من جهة أخرى - من يحسن عربيته ويبدع فيها، فلا يحظى بأية مزيــة أو ميزة، وبراعته لا تجديه ولن تجزيه شيئًا .... ثم إن بعض المسرحيات تستخدم ألفاظًا عن سابق قصد – لإثارة السخرية اللاذعة من هذه اللغة الفصيحة، فيظهرونها وكأنها التشدق والتفيهق، وما مثـَّله عادل إمام وقوله "ألححت إصرارًا ...وأصررت إلحاحًا" إلا نموذج على ذلك.
+
+  ''',
+    rating: 4.8,
+    language: "en",
+    bookId: 0,
+    author: '',
+    bookimageURL: '',
+  );
+
+  Book book4 = Book(
+    booktitle: "Echoes of the Forgotten Forest",
+    description:
+        "A captivating journey through a mystical forest where forgotten legends awaken and ancient spirits guide the lost.",
+    pages: 420,
+    bookcontent: '''
+**Green** is more than just the color of nature — it is a symbol of renewal, life, balance, and growth. Throughout history, green has represented prosperity, fertility, and hope. In ancient Rome, green was the color of Venus, the goddess of love and gardens. In Islamic cultures, it is associated with paradise and eternal life.
+
+In modern psychology, green is considered a restful and soothing color. Hospitals and therapy rooms often use green tones to promote calmness and healing. The human eye is highly sensitive to green, making it the most restful color for our vision.
+
+Ecologically, green is the banner of sustainability. It is the face of environmental movements, renewable energy campaigns, and global efforts to protect Earth’s resources. The phrase “going green” has become synonymous with responsibility toward nature and future generations.
+
+In art, green has played both positive and mysterious roles. Renaissance artists used rich green pigments made from natural minerals, while Impressionists used vibrant greens to capture the movement of grass, trees, and landscapes.
+
+Culturally, green can have contrasting meanings. In Western contexts, it symbolizes luck (like the four-leaf clover), while in others, it may signal jealousy ("green with envy") or immaturity. The emotional tone of green varies by context and usage.
+
+From currency to traffic lights, green is deeply embedded in modern life as a signal of prosperity, movement, and success. It inspires feelings of freshness, new beginnings, and peace.
+
+Whether in the forest canopy, a jade sculpture, or the soft glow of spring leaves — **green** surrounds us, comforts us, and connects us to the living world.
+
+  ''',
+    rating: 4.9,
+    language: "en",
+    bookId: 1,
+    author: '',
+    bookimageURL: '',
+  );
+
+  Book book3 = Book(
+    booktitle: "The Power of Blue",
+    description:
+        "A brief reflection on the calming and inspiring nature of the color blue.",
+    pages: 120,
+    bookcontent: '''
+**Blue** is the color of sky and sea — open, vast, and free. It brings feelings of calm, peace, and trust. In many cultures, blue is a sacred and protective color.
+
+Artists use blue to paint serenity and imagination. In business, it shows professionalism and reliability. Blue jeans, blue skies, blue oceans — the color is everywhere, reminding us to breathe, reflect, and dream.
+
+Though often quiet, blue holds deep power — it can soothe or inspire, cool or energize. In all its shades, **blue** speaks to the soul.
+
+  ''',
+    rating: 4.6,
+    language: "en",
+    bookId: 2,
+    author: '',
+    bookimageURL: '',
+  );
+Book book5 = Book(
+  booktitle: "The Light Beyond the Trees",
+  description: "A short tale of friendship, mystery, and hope beneath the forest canopy.",
+  pages: 98,
+  bookcontent: '''
+Manal had always dreamed of traveling the world. Since childhood, she would spend hours reading books about distant places, imagining the adventures that awaited her. One summer, she finally decided to take a leap and planned a trip to Europe.
+
+Before her departure, she met with her close friends Mohamed and Ahmed to share her plans. Mohamed, who was working as an architect, encouraged her to follow her dreams and promised to help with anything she might need. Ahmed, on the other hand, was a passionate photographer and offered to document her journey through pictures.
+
+During the trip, Manal visited famous landmarks in Paris, Rome, and Barcelona. She sent postcards to Mohamed and Ahmed, describing her experiences and the fascinating people she met. Mohamed admired her courage and often sketched designs inspired by her stories. Ahmed started compiling a photo album capturing moments from their lives to create a memory book.
+
+Back home, the friends often gathered at their favorite café to catch up. Manal shared her travel tales, Mohamed presented his latest architectural models, and Ahmed showcased his newest photographs. Their friendship was a blend of inspiration, support, and shared dreams.
+
+One day, Manal faced a difficult decision about her career path. Mohamed and Ahmed stood by her side, offering advice and encouragement. Mohamed suggested incorporating art and architecture into her projects, while Ahmed recommended capturing life’s beauty through photography.
+
+Together, they planned a community project to combine their talents — a public space where art, architecture, and photography told stories of their city’s heritage. The project became a symbol of their friendship and dedication to making a difference.
+
+Years later, when people visited the space, they often heard about the trio — Manal, Mohamed, and Ahmed — whose collaboration transformed a dream into reality. Their journey was a testament to the power of friendship, creativity, and believing in oneself.
+
+''',
   rating: 4.8,
-  language: "en", 
-  bookId: 0, 
-  author: '', bookimageURL: '',
+  language: "en",
+  bookId: 5,
+  author: 'Ava Bennett',
+  bookimageURL: '',
 );
+
   List<Book> libraryBooks = [];
   bool isLoading = true;
 
   Future<void> fetchBooks() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.7:5000/get_books'), // 🔁 Replace with your Flask URL
+        Uri.parse(
+            'http://192.168.1.7:5000/get_books'), // 🔁 Replace with your Flask URL
       );
       if (response.statusCode == 200) {
         List data = jsonDecode(response.body);
@@ -123,8 +229,6 @@ class _HomeState extends State<Home> {
 
   String selectedCategory = "All";
 
-
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -136,7 +240,6 @@ class _HomeState extends State<Home> {
         slivers: [
           GetX<RecentBooksController>(builder: (controller) {
             return SliverAppBar(
-              
               automaticallyImplyLeading: false,
               pinned: true,
               expandedHeight: (controller.recentBooks.isEmpty)
@@ -249,11 +352,45 @@ class _HomeState extends State<Home> {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(screenWidth * 0.025),
-              child: Text('Categories',
-                  style: TextStyle(
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black)),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Text('Categories',
+                          style: TextStyle(
+                              fontSize: screenWidth * 0.045,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black)),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  GestureDetector(
+                    onTap: (){
+                      Get.to(() => ChatBotPage());
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/Icons/chatbot.svg',
+                          color: Color(0xffFEC838),
+                        ),
+                        SizedBox(
+                          width: 8,
+                        ),
+                        Text('Ask Book Expert?',
+                            style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: screenWidth * 0.032,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blueAccent[400])),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -322,7 +459,21 @@ class _HomeState extends State<Home> {
   Widget searchBar(double screenWidth, double screenHeight) {
     return GestureDetector(
         onTap: () {
-         Get.to(() => SearchPage());
+          Get.dialog(
+            Dialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              child: CharctersDialog(book: book5),
+            ),
+          );
+
+          /* Get.to(() => CharctersDialog(
+                book: book4,
+              ));*/
+          /*ReadingPage(
+                book: book3,
+              ));*/
+          /* Get.to(() => SearchPage())*/;
         },
         child: Container(
           decoration: BoxDecoration(

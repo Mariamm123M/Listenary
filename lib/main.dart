@@ -5,14 +5,13 @@ import 'package:listenary/controller/highlightedController.dart';
 import 'package:listenary/controller/notesController.dart';
 import 'package:listenary/controller/recent_books_controller.dart';
 import 'package:listenary/controller/searchController.dart';
-import 'package:listenary/view/components/bottom_navigation_bar.dart';
 import 'package:listenary/view/pages/help_center.dart';
 import 'package:listenary/view/pages/home.dart';
 import 'package:listenary/view/pages/login.dart' as login_page;
 import 'package:listenary/view/pages/profile.dart';
 import 'package:listenary/view/pages/settings.dart';
 import 'package:listenary/view/pages/signup.dart' as signup_page;
-import 'package:listenary/view/pages/splash_screen.dart';
+import 'package:listenary/view/pages/splash_Screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -48,6 +47,7 @@ class MyApp extends StatelessWidget {
           style: ButtonStyle(
             textStyle: WidgetStatePropertyAll(
               TextStyle(
+                fontFamily: 'Inter',
                 fontSize: screenWidth * 0.038,
                 fontWeight: FontWeight.w700,
               ),
@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: SplashScreen(),
+      home: /*SplashScreen()*/ Home(),
       //initialRoute: "/signup",
       getPages: [
         GetPage(name: "/", page: () => const SplashScreen()),

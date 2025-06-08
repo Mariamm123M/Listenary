@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:listenary/controller/highlightedController.dart';
 import 'package:listenary/controller/searchController.dart' as my_search;
 import 'package:listenary/model/book_model.dart';
 import 'package:listenary/services/tts/tts_service.dart';
 import 'package:listenary/view/components/SummaryDialog.dart';
 import 'package:listenary/view/components/TranslateDialog.dart';
 import 'package:listenary/view/components/comamnds.dart';
+import 'package:listenary/view/components/executions.dart';
+import 'package:listenary/view/components/myappbar.dart';
 import 'package:listenary/view/components/slider.dart';
 import 'package:listenary/view/components/font_menu.dart';
 import 'package:listenary/view/components/text_display.dart';
@@ -26,6 +29,7 @@ class ReadingPage extends StatefulWidget {
 
 class _ReadingPageState extends State<ReadingPage> {
   bool _isDarkMode = false;
+  bool isSearching = false;
   String lang = "";
   String summarizedText = '';
   String originalText = '';
@@ -35,20 +39,24 @@ class _ReadingPageState extends State<ReadingPage> {
   List<String> _sentences = [];
   double _sliderValue = 0.0;
   double scaleFactor = 1.0;
-  bool _isFullScreen = false;
+  //bool _isFullScreen = false;
   late ScrollController sharedScrollController;
   final searchController = Get.find<my_search.MySearchController>();
   final translator = GoogleTranslator();
+  final highlightController = Get.find<HighlightController>();
+  bool _isLoading = false;
+  bool _isPlaying = false;
 
+  @override
   @override
   void initState() {
     super.initState();
     sharedScrollController = ScrollController();
 
-    // اربط TTS و Search بنفس الـ controller
+    // Link TTS and Search to the same controller
     _ttsService.scrollController = sharedScrollController;
     searchController.attachToScrollController(sharedScrollController);
-    _ttsService.loadVoicePreference(); // Load voice preference
+
     // Initialize text content
     originalText = widget.book?.bookcontent ??
         widget.documnetText ??
@@ -56,9 +64,24 @@ class _ReadingPageState extends State<ReadingPage> {
     _sentences = originalText.split(RegExp(r'(?<=[.!?])\s*'));
     cleanedText = originalText.replaceAll(
         RegExp(r'[^a-zA-Z0-9\u0621-\u064A\s.,:?!]'), ' ');
-    lang = detectLanguage(cleanedText);
+    lang = detectLanguage(cleanedText); //en or ar
     print(lang);
-    // Initialize the TTS service listeners
+
+    // Load voice preference
+    _ttsService.loadVoicePreference().then((_) {
+      setState(() {
+        // Update UI after voice preference is loaded
+      });
+    });
+
+    // Add loading state listener
+    _ttsService.onLoadingStateChanged = (isLoading) {
+      setState(() {
+        _isLoading = isLoading;
+      });
+    };
+
+    // Initialize the TTS service position listener
     _ttsService.onPositionChanged = (Duration position, int sentenceIndex) {
       setState(() {
         _sliderValue = position.inMilliseconds /
@@ -67,48 +90,63 @@ class _ReadingPageState extends State<ReadingPage> {
                 : 1);
       });
     };
+
     // Listen for audio completion
     _ttsService.onPlayerComplete = () {
       setState(() {
         _sliderValue = 0.0;
+        _isPlaying = false;
       });
     };
   }
 
-  String detectLanguage(String text) {
-    // Check for Arabic characters (includes Arabic, Persian, Urdu, etc.)
-    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
-    // Check for English letters
-    final englishRegex = RegExp(r'[a-zA-Z]');
-
-    bool hasArabic = arabicRegex.hasMatch(text);
-    bool hasEnglish = englishRegex.hasMatch(text);
-
-    if (hasArabic && !hasEnglish) {
-      return 'ar'; // Arabic text
-    } else if (hasEnglish && !hasArabic) {
-      return 'en'; // English text
-    } else if (hasArabic && hasEnglish) {
-      // Count characters to determine dominant language
-      int arabicCount =
-          text.split('').where((c) => arabicRegex.hasMatch(c)).length;
-      int englishCount =
-          text.split('').where((c) => englishRegex.hasMatch(c)).length;
-      return arabicCount > englishCount ? 'ar' : 'en';
-    } else {
-      return 'en'; // Default to English if no letters detected
+// Add a method to restart playback
+  Future<void> _restartPlayback() async {
+    try {
+      await _ttsService.restart();
+      setState(() {
+        _isPlaying = _ttsService.isPlaying;
+      });
+    } catch (e) {
+      print("Error restarting playback: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error restarting playback. Please try again.")),
+      );
     }
   }
 
-  void _handlePlayPause() async {
-    if (!_ttsService.isPlaying && _ttsService.totalDuration == Duration.zero) {
-      // First time play - initialize TTS with the text
-      await _ttsService.startTTS(cleanedText);
-    } else {
-      // Regular play/pause
-      await _ttsService.playPauseAudio();
+  // Handle play/pause with proper reuse of generated audio
+  Future<void> _handlePlayPause() async {
+    try {
+      // If there's text to play
+      if (originalText.isNotEmpty) {
+        if (_ttsService.lastAudioFilePath.isEmpty ||
+            !_ttsService.isPlaying && !_ttsService.isPaused) {
+          // First play or need to regenerate
+          setState(() {
+            _isLoading = true;
+          });
+
+          await _ttsService.startTTS(originalText,
+              context: context,
+              style: selectedFontStyle,
+              maxWidth: MediaQuery.of(context).size.width);
+        } else {
+          // Toggle between play and pause
+          await _ttsService.playPauseAudio();
+        }
+
+        setState(() {
+          _isPlaying = _ttsService.isPlaying;
+        });
+      }
+    } catch (e) {
+      print("Error playing audio: $e");
+      setState(() {
+        _isLoading = false;
+        _isPlaying = false;
+      });
     }
-    setState(() {});
   }
 
   void toggleSummary() {
@@ -166,23 +204,19 @@ class _ReadingPageState extends State<ReadingPage> {
     super.dispose();
   }
 
+  void toggleVoice() {
+    _ttsService.toggleVoice(context, selectedFontStyle);
+  }
+
   String selectedFontFamily = 'Inter';
   FontWeight selectedFontWeight = FontWeight.w700;
   TextDecoration selectedFontDecoration = TextDecoration.none;
   FontStyle selectedFontStyle = FontStyle.normal;
-  void _onScaleUpdate(ScaleUpdateDetails details) {
-    setState(() {
-      scaleFactor = details.scale;
-      if (scaleFactor > 1.5) {
-        _isFullScreen = true;
-      } else {
-        _isFullScreen = false;
-      }
-    });
-  }
-void _translateWholePage(String targetLang) async {
+
+  void _translateWholePage(String targetLang) async {
     try {
-      final translation = await translator.translate(originalText, to: targetLang);
+      final translation =
+          await translator.translate(originalText, to: targetLang);
       setState(() {
         summarizedText = ''; // نفضي ملخص لو في
         isSummarized = false;
@@ -197,6 +231,7 @@ void _translateWholePage(String targetLang) async {
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     Color backgroundColor = _isDarkMode ? Color(0xFF212E54) : Colors.white;
@@ -205,207 +240,177 @@ void _translateWholePage(String targetLang) async {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: _isDarkMode ? Color(0xFF212E54) : Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: _isDarkMode ? Colors.white : Color(0xFF212E54),
-            size: 24,
-          ),
-          onPressed: () {
-            Get.back();
-          },
-        ),
-        title: Text(
-          (widget.book == null || widget.book!.booktitle.isEmpty)
-              ? "Unknown Document"
-              : widget.book!.booktitle,
-          style: TextStyle(
-            color: _isDarkMode ? Colors.white : Color(0xFF212E54),
-            fontSize: 18 * scaleFactor, // Apply the scale factor here
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.zoom_in),
-            onPressed: () {
-              setState(() {
-                scaleFactor += 0.1; // تكبير النص
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.zoom_out),
-            onPressed: () {
-              setState(() {
-                scaleFactor -= 0.1; // تصغير النص
-              });
-            },
-          ),
-          IconButton(
-            icon: SvgPicture.asset("assets/Icons/night.svg",
-                color: _isDarkMode ? Color(0xff949494) : Color(0xffFEC838),
-                width: 28,
-                height: 28),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
-            icon: SvgPicture.asset(
-              'assets/Icons/summarize.svg',
-              width: 30,
-              height: 30,
-            ),
-            onPressed: () {
-              showMenu(
+      appBar: MyAppBar(
+        screenWidth: screenWidth,
+        screenHeight: screenHeight,
+        title:
+            widget.book == null ? "Unknown Document" : widget.book!.booktitle,
+        isDarkMode: _isDarkMode,
+        isSearching: searchController.isSearching.value,
+        changeMode: () {
+          setState(() {
+            _isDarkMode = !_isDarkMode;
+          });
+        },
+        formatText: () {
+          showFontMenu(context, (value) {
+            setState(() {
+              if (value == 'Bold') {
+                selectedFontWeight = (selectedFontWeight == FontWeight.bold)
+                    ? FontWeight.normal
+                    : FontWeight.bold;
+              } else if (value == 'Underline') {
+                selectedFontDecoration =
+                    (selectedFontDecoration == TextDecoration.underline)
+                        ? TextDecoration.none
+                        : TextDecoration.underline;
+              } else if (value == 'Italic') {
+                selectedFontStyle = (selectedFontStyle == FontStyle.italic)
+                    ? FontStyle.normal
+                    : FontStyle.italic;
+              }
+              else if (value == 'Back to normal') {
+                selectedFontStyle =  FontStyle.normal;
+                selectedFontWeight = FontWeight.w700;
+                selectedFontDecoration = TextDecoration.none;
+                selectedFontFamily = "Inter";
+              } else {
+                selectedFontFamily = value ?? selectedFontFamily;
+              }
+            });
+          });
+        },
+        searchText: () {
+          setState(() {
+            isSearching = !isSearching;
+          });
+          if (isSearching) {
+            searchController.isSearching.value = true;
+            searchController.initializeSearch(_sentences);
+            searchController.updateSearchTerm("");
+            highlightController.updateHighlight("");
+          } else {
+            searchController.isSearching.value = false;
+          }
+        },
+        summarize: () {
+          showMenu(
+            context: context,
+            position: RelativeRect.fromLTRB(100.0, 100.0, 100.0, 100.0),
+            items: [
+              PopupMenuItem(
+                child: Text('Select Text'),
+                value: 'select_text',
+              ),
+              PopupMenuItem(
+                child: Text(
+                  isSummarized
+                      ? 'Reset to original content'
+                      : 'Summarize the whole page',
+                  style: TextStyle(
+                    color: isSummarized ? Colors.blueAccent : Colors.black,
+                  ),
+                ),
+                value: 'summarizeText',
+              ),
+            ],
+          ).then((value) {
+            if (value == 'select_text') {
+              showDialog(
                 context: context,
-                position: RelativeRect.fromLTRB(100.0, 100.0, 100.0, 100.0),
-                items: [
-                  PopupMenuItem(
-                    child: Text('Select Text'),
-                    value: 'select_text',
-                  ),
-                  PopupMenuItem(
-                    child: Text(
-                      isSummarized
-                          ? 'Reset to original content'
-                          : 'Summarize the whole page',
-                      style: TextStyle(
-                        color: isSummarized ? Colors.blueAccent : Colors.black,
-                      ),
-                    ),
-                    value: 'summarizeText',
-                  ),
-                ],
-              ).then((value) {
-                if (value == 'select_text') {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SummaryDialog(isDarkMode: _isDarkMode);
-                    },
-                  );
-                } else if (value == 'summarizeText') {
-                  setState(() {
-                    if (isSummarized) {
-                      summarizedText = '';
-                    } else {
-                      summarizedText = summarizeText(originalText);
-                    }
-                    isSummarized = !isSummarized;
-                  });
+                builder: (BuildContext context) {
+                  return SummaryDialog(isDarkMode: _isDarkMode);
+                },
+              );
+            } else if (value == 'summarizeText') {
+              setState(() {
+                if (isSummarized) {
+                  summarizedText = '';
+                } else {
+                  summarizedText = summarizeText(originalText);
                 }
+                isSummarized = !isSummarized;
               });
-            },
-          ),
-          IconButton(
-            icon: SvgPicture.asset('assets/Icons/Note.svg',
-                width: 24, height: 24),
-            onPressed: () {
-              showFontMenu(context, (value) {
-                setState(() {
-                  if (value == 'Bold') {
-                    selectedFontWeight = (selectedFontWeight == FontWeight.bold)
-                        ? FontWeight.normal
-                        : FontWeight.bold;
-                  } else if (value == 'Underline') {
-                    selectedFontDecoration =
-                        (selectedFontDecoration == TextDecoration.underline)
-                            ? TextDecoration.none
-                            : TextDecoration.underline;
-                  } else if (value == 'Italic') {
-                    selectedFontStyle = (selectedFontStyle == FontStyle.italic)
-                        ? FontStyle.normal
-                        : FontStyle.italic;
-                  } else {
-                    selectedFontFamily = value ?? selectedFontFamily;
-                  }
-                });
-              });
-            },
-          ),
-          IconButton(
-            icon: SvgPicture.asset(
-              'assets/Icons/translate.svg',
-              width: 24,
-              height: 24,
-            ),
-            onPressed: () {
-              showMenu(
+            }
+          });
+        },
+        translateText: () {
+          showMenu(
+            context: context,
+            position: RelativeRect.fromLTRB(100.0, 100.0, 100.0, 100.0),
+            items: [
+              PopupMenuItem(
+                child: Text('Select Text'),
+                value: 'select_text',
+              ),
+              PopupMenuItem(
+                child: Text('Translate the whole page'),
+                value: 'translateText',
+              ),
+            ],
+          ).then((value) {
+            if (value == 'select_text') {
+              showDialog(
                 context: context,
-                position: RelativeRect.fromLTRB(100.0, 100.0, 100.0, 100.0),
-                items: [
-                  PopupMenuItem(
-                    child: Text('Select Text'),
-                    value: 'select_text',
-                  ),
-                  PopupMenuItem(
-                    child: Text('Translate the whole page'),
-                    value: 'translateText',
-                  ),
-                ],
-              ).then((value) {
-                if (value == 'select_text') {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return TranslateDialog(isDarkMode: _isDarkMode);
-                    },
-                  );
-                } else if (value == 'translateText') {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      String? selectedLangCode;
-
-                      return StatefulBuilder(
-                        builder: (context, setState) {
-                          return AlertDialog(
-                            title: Text("Select a language"),
-                            content: DropdownButton<String>(
-                              value: selectedLangCode,
-                              hint: Text("Choose language"),
-                              items: [
-                                DropdownMenuItem(
-                                    value: 'en', child: Text("English")),
-                                DropdownMenuItem(
-                                    value: 'ar', child: Text("Arabic")),
-                                DropdownMenuItem(
-                                    value: 'fr', child: Text("French")),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedLangCode = value!;
-                                });
-                              },
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  if (selectedLangCode != null) {
-                                    Get.back();
-                                    _translateWholePage(selectedLangCode!);
-                                  }
-                                },
-                                child: Text("Translate"),
-                              )
-                            ],
-                          );
-                        },
+                builder: (BuildContext context) {
+                  return TranslateDialog(isDarkMode: _isDarkMode);
+                },
+              );
+            } else if (value == 'translateText') {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  String? selectedLangCode;
+                  return StatefulBuilder(
+                    builder: (context, setState) {
+                      return AlertDialog(
+                        title: Text("Select a language"),
+                        content: DropdownButton<String>(
+                          value: selectedLangCode,
+                          hint: Text("Choose language"),
+                          items: [
+                            DropdownMenuItem(
+                                value: 'en', child: Text("English")),
+                            DropdownMenuItem(
+                                value: 'ar', child: Text("Arabic")),
+                            DropdownMenuItem(
+                                value: 'fr', child: Text("French")),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedLangCode = value!;
+                            });
+                          },
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              if (selectedLangCode != null) {
+                                Get.back();
+                                _translateWholePage(selectedLangCode!);
+                              }
+                            },
+                            child: Text("Translate"),
+                          )
+                        ],
                       );
                     },
                   );
-                }
-              });
-            },
-          ),
-        ],
+                },
+              );
+            }
+          });
+        },
+        zoomIn: () {
+          setState(() {
+            scaleFactor += 0.1; // تكبير النص
+          });
+        },
+        zoomOut: () {
+          setState(() {
+            scaleFactor -= 0.1; // تصغير النص
+          });
+        },
       ),
       body: Directionality(
         textDirection: lang == "en" ? TextDirection.ltr : TextDirection.rtl,
@@ -418,6 +423,7 @@ void _translateWholePage(String targetLang) async {
                   context: context,
                   isScrollControlled: true,
                   builder: (context) => AiAssistant(
+                        bookLang: lang,
                         currentSentenceIndex: _ttsService.currentSentenceIndex,
                         book: widget.book,
                         sentences: _sentences,
@@ -439,13 +445,16 @@ void _translateWholePage(String targetLang) async {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0),
                   child: TextDisplay(
+                    isDarkMode: _isDarkMode,
                     book: widget.book,
                     scaleFactor: scaleFactor,
                     scrollController: sharedScrollController,
                     screenHeight: screenHeight,
                     screenWidth: screenWidth,
                     currentSentenceIndex: _ttsService.currentSentenceIndex,
-                    sentences: isSummarized ? summarizedText.split(RegExp(r'(?<=[.!?])\s*')) : _sentences,
+                    sentences: isSummarized
+                        ? summarizedText.split(RegExp(r'(?<=[.!?])\s*'))
+                        : _sentences,
                     selectedFontDecoration: selectedFontDecoration,
                     selectedFontFamily: selectedFontFamily,
                     selectedFontStyle: selectedFontStyle,
@@ -458,13 +467,15 @@ void _translateWholePage(String targetLang) async {
                 child: Opacity(
                   opacity: 1,
                   child: PlayerControllers(
+                    onRestart: _restartPlayback,
+                    isLoading: _isLoading,
                     isDarkMode: _isDarkMode,
                     isPlaying: _ttsService.isPlaying,
                     onPlayPause: _handlePlayPause,
                     onSkipBackward: _ttsService.skipBackward,
                     onSkipForward: _ttsService.skipForward,
                     onChangeSpeed: _ttsService.changeSpeed,
-                    onToggleVoice: _ttsService.toggleVoice,
+                    onToggleVoice: toggleVoice,
                     imagePath: _ttsService.imagePath,
                     playbackSpeed: _ttsService.playbackSpeed,
                     slider: SliderAndTime(

@@ -41,7 +41,10 @@ class _LoginState extends State<Login> {
                 },
                 child: Row(
                   children: [
-                    const Icon(Icons.arrow_back_rounded),
+                    Icon(
+                      Icons.arrow_back_rounded,
+                      size: screenWidth * 0.05,
+                    ),
                     SizedBox(width: screenWidth * 0.02),
                     Text(
                       "Back",
@@ -96,13 +99,18 @@ class _LoginState extends State<Login> {
                       validator: (value) {
                         if (value!.isEmpty) {
                           return "Please enter your email";
-                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                            .hasMatch(value)) {
                           return "Enter a valid email";
                         }
                         return null;
                       },
                       controller: emailController,
-                      prefixIcon: SvgPicture.asset("assets/Icons/email.svg"),
+                      prefixIcon: Image.asset(
+                        "assets/Icons/email.png",
+                        height: screenHeight * 0.003,
+                        width: screenWidth * 0.003,
+                      ),
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
@@ -121,14 +129,18 @@ class _LoginState extends State<Login> {
                         return null;
                       },
                       controller: passwordController,
-                      prefixIcon: Image.asset("assets/Icons/Lock.png"),
+                      prefixIcon: Image.asset(
+                        "assets/Icons/lock.png",
+                        height: screenHeight * 0.003,
+                        width: screenWidth * 0.003,
+                      ),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
                             isObsecure = !isObsecure;
                           });
                         },
-                        icon: Image.asset("assets/Icons/eye.png"),
+                        icon: SvgPicture.asset("assets/Icons/eye.svg"),
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.03),
@@ -169,7 +181,8 @@ class _LoginState extends State<Login> {
                       onTap: () async {
                         bool success = await _authService.signInWithGoogle();
                         if (success) {
-                          Get.offAll(() => const BottomNavBarScreen()); // Navigate after Google sign-in
+                          Get.offAll(() =>
+                              const BottomNavBarScreen()); // Navigate after Google sign-in
                         }
                       },
                       child: SvgPicture.asset(

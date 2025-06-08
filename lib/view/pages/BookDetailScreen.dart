@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/model/book_model.dart';
-import 'package:listenary/view/pages/ReadingPage.dart';
+import 'package:listenary/view/components/chracters_dialog.dart';
 
 class BookDetailScreen extends StatelessWidget {
   final Book book;
@@ -109,13 +109,17 @@ class BookDetailScreen extends StatelessWidget {
                             horizontal: screenWidth * 0.2,
                             vertical: screenHeight * 0.015)),
                         backgroundColor:
-                        WidgetStatePropertyAll(Color(0xffFEC838)),
+                            WidgetStatePropertyAll(Color(0xffFEC838)),
                         shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(45)))),
                     onPressed: () {
-                      Get.to(() => ReadingPage(
-                        book: book,
-                      ));
+                      Get.dialog(
+                        Dialog(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                          child: CharctersDialog(book: book),
+                        ),
+                      );
                     },
                     child: Text(
                       "Play Now",
@@ -126,14 +130,17 @@ class BookDetailScreen extends StatelessWidget {
                           fontFamily: 'Inter'),
                     )),
                 GestureDetector(
-                  child: SvgPicture.asset("assets/Icons/Headphones.svg",
-                      height: 45, width: 45, fit: BoxFit.fill),
-                  onTap: () {
-                    Get.to(() => ReadingPage(
-                      book: book,
-                    ));
-                  },
-                )
+                    child: SvgPicture.asset("assets/Icons/Headphones.svg",
+                        height: 45, width: 45, fit: BoxFit.fill),
+                    onTap: () {
+                      Get.dialog(
+                        Dialog(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                          child: CharctersDialog(book: book),
+                        ),
+                      );
+                    })
               ],
             ),
             Padding(
@@ -141,7 +148,7 @@ class BookDetailScreen extends StatelessWidget {
                   left: screenWidth * 0.035, top: screenHeight * 0.05),
               child: Container(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
@@ -164,7 +171,7 @@ class BookDetailScreen extends StatelessWidget {
             ),
             Padding(
               padding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
               child: Container(
                 height: 400,
                 child: SingleChildScrollView(

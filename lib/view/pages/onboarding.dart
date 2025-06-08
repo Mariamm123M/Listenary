@@ -130,9 +130,10 @@ class _OnboardingState extends State<Onboarding> {
                     );
                   });
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_outlined,
-                  color: Color(0xff212E54),
+                  size: screenWidth * 0.05,
+                  color: const Color(0xff212E54),
                 ),
               ),
               Text(
@@ -324,7 +325,7 @@ class _InstructionsState extends State<Instructions> {
               ),
             ),
           ),
-        SvgPicture.asset("assets/Icons/onboarding_center.svg"),
+        SvgPicture.asset("assets/Images/onboarding_center.svg"),
         for (int i = widget.instructions.length ~/ 2;
             i < widget.instructions.length;
             i++)

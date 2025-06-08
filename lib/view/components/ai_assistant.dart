@@ -16,9 +16,16 @@ class AiAssistant extends StatefulWidget {
   final List<String> sentences;
   final Book? book;
   final int currentSentenceIndex;
-  
+  final String bookLang;
+
   const AiAssistant(
-      {super.key, required this.screenHeight, required this.screenWidth, required this.sentences,this.book, required this.currentSentenceIndex});
+      {super.key,
+      required this.bookLang,
+      required this.screenHeight,
+      required this.screenWidth,
+      required this.sentences,
+      this.book,
+      required this.currentSentenceIndex});
 
   @override
   _AiAssistantState createState() => _AiAssistantState();
@@ -34,8 +41,8 @@ class _AiAssistantState extends State<AiAssistant>
   bool _isListening = false;
   String _aiResponse = '';
   String _detectedCommand = '';
-  String lang = "en-US";
-  String selectedLang = "en";
+
+  //String selectedLang = "en";
   List<Color> colors = [
     Color(0xff5356FF),
     Color(0xff3572EF),
@@ -83,8 +90,8 @@ class _AiAssistantState extends State<AiAssistant>
   }
 
   Future<void> sendToAi() async {
-    final result = AiResponse.process(_text, lang); // استخدم AiResponse مباشرة
-
+    final result =
+        AiResponse.process(_text, widget.bookLang == "en"? "en-US" : "ar-AR"); // استخدم AiResponse مباشرة
     if (result.isCommand) {
       _detectedCommand = result.command ?? "No command detected";
       _aiResponse = result.predefinedResponse ?? "No response generated";
@@ -95,7 +102,7 @@ class _AiAssistantState extends State<AiAssistant>
       print("Argument: ${result.argument}");
       print("Predefined Response: ${result.predefinedResponse}");
 
-      // تقريه بالـ TTS
+      await _fttsService.setLanguage(widget.bookLang);
       _fttsService.speak(_aiResponse);
       await Future.delayed(Duration(seconds: 2));
       await result.executeCommand(
@@ -106,7 +113,6 @@ class _AiAssistantState extends State<AiAssistant>
         tapPosition: tapPosition,
         screenHeight: widget.screenHeight,
         screenWidth: widget.screenWidth,
-        selectedLang: selectedLang,
         setLoading: (val) {
           setState(() {
             isLoading = val;
@@ -122,8 +128,9 @@ class _AiAssistantState extends State<AiAssistant>
     } else {
       print("No command detected");
 
-      _aiResponse = "Sorry, I couldn't detect any command in your speech.";
+      _aiResponse = widget.bookLang == "en"? "Sorry, I couldn't detect any command in your speech.":"لم يتم الكشف عن أي أمر.";
       _showResponse = true;
+      await _fttsService.setLanguage(widget.bookLang);
       _fttsService.speak(_aiResponse);
 
       await Future.delayed(Duration(seconds: 3));
@@ -170,25 +177,44 @@ class _AiAssistantState extends State<AiAssistant>
 
                 if (_text.isNotEmpty) {
                   List<String> words = _text.split(' ');
-                  if (words.length == 1 && words[0].toLowerCase() == "translate") {
-                  setState(() {
-                    _text = "translate"; // تأكيد الأمر
-                  });
-                  sendToAi(); // تنفيذ الأمر مباشرة
-                } 
-                if (words.length == 1 && words[0].toLowerCase() == "summarize") {
-                  setState(() {
-                    _text = "summarize"; // تأكيد الأمر
-                  });
-                  sendToAi(); // تنفيذ الأمر مباشرة
-                } 
-                  else if (words.length <= 3) {
+                  if (words.length == 1 &&
+                      (words[0].toLowerCase() == "translate" ||
+                          words[0].toLowerCase() == "ترجم")) {
+                    sendToAi(); // تنفيذ الأمر مباشرة
+                  } else if (words.length == 1 &&
+                      (words[0].toLowerCase() == "summarize" ||
+                          words[0].toLowerCase() == "لخص")) {
+                    sendToAi(); // تنفيذ الأمر مباشرة
+                  } else if (words.length == 1 &&
+                      (words[0].toLowerCase() == "define" ||
+                          words[0].toLowerCase() == "عرف" ||
+                          words[0].toLowerCase() == "show" ||
+                          words[0].toLowerCase() == "اعرض" ||
+                          words[0].toLowerCase() == "find" ||
+                          words[0].toLowerCase() == "ابحث")) {
+                    _aiResponse = widget.bookLang == "en"
+                        ? "Unfinished command, i need more information."
+                        : "أمر غير مكتمل، أحتاج معلومات أخرى.";
+                    _fttsService.setLanguage(widget.bookLang);
+                    _fttsService.speak(_aiResponse);
+                    _showResponse = true;
+                    Future.delayed(Duration(seconds: 5), () {
+                      setState(() {
+                        _aiResponse = "";
+                        // Clear message after a while
+                        isRecording = false;
+                        _isListening = false;
+                      });
+                    });
+                  } else if (words.length <= 3) {
                     sendToAi(); // ✅ Execute once, only when result is final
                   } else {
                     // Display message when more than 2 words are detected
-                    setState(() {
-                      _aiResponse =
-                          "Please speak only 2 words or fewer, not ${words.length} words.";
+                    setState(() async {
+                      _aiResponse = widget.bookLang == "en"
+                          ? "Please speak only 2 words or fewer, not ${words.length} words."
+                          : "  كلمات .${words.length} أرجوك تحدث كلمتين أو أقل وليس ";
+                      await _fttsService.setLanguage(widget.bookLang);
                       _fttsService.speak(_aiResponse);
                       _showResponse = true;
                     });
@@ -204,11 +230,13 @@ class _AiAssistantState extends State<AiAssistant>
                 }
               }
             },
-            localeId: lang,
+            localeId: widget.bookLang == "en" ? "en-US" : "ar-AR",
           );
         } else {
           setState(() {
-            _aiResponse = "Speech recognition not available.";
+            _aiResponse = widget.bookLang == "en"
+                ? "Speech recognition not available now."
+                : ".التعرف الصوتي غير متاح حاليا ";
             isRecording = false;
             _isListening = false;
             _showResponse = true;

@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/services/auth_service.dart';
 import 'package:listenary/view/components/custom_textformfield.dart';
-import 'package:listenary/view/pages/login.dart' as login_page;
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../components/bottom_navigation_bar.dart';
@@ -56,27 +55,7 @@ class _SignUpState extends State<SignUp> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              InkWell(
-                onTap: () {
-                  Get.back();
-                },
-                child: Row(
-                  children: [
-                    const Icon(Icons.arrow_back_rounded),
-                    SizedBox(width: screenWidth * 0.02),
-                    Text(
-                      "Back",
-                      style: TextStyle(
-                        color: const Color(0XFF212E54),
-                        fontSize: screenWidth * 0.035,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.01),
+              SizedBox(height: screenHeight * 0.02),
               Center(
                 child: Image.asset(
                   "assets/Icons/logo.png",
@@ -139,7 +118,11 @@ class _SignUpState extends State<SignUp> {
                         return null;
                       },
                       controller: emailController,
-                      prefixIcon: SvgPicture.asset("assets/Icons/email.svg"),
+                      prefixIcon: Image.asset(
+                        "assets/Icons/email.png",
+                        height: screenHeight * 0.003,
+                        width: screenWidth * 0.003,
+                      ),
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
@@ -158,7 +141,11 @@ class _SignUpState extends State<SignUp> {
                         return null;
                       },
                       controller: passwordController,
-                      prefixIcon: SvgPicture.asset("assets/Icons/Lock.svg"),
+                      prefixIcon: Image.asset(
+                        "assets/Icons/lock.png",
+                        height: screenHeight * 0.003,
+                        width: screenWidth * 0.003,
+                      ),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
@@ -196,7 +183,12 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.02),
 
-                    Text("or register using"),
+                    Text("or register using", style: TextStyle(
+                        color: const Color(0XFF787878),
+                        fontSize: screenWidth * 0.04,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),),
                     SizedBox(height: screenHeight * 0.01),
 
                     GestureDetector(
@@ -217,11 +209,32 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.01),
 
-                    GestureDetector(
-                      onTap: () {
-                        Get.to(() => login_page.Login());
-                      },
-                      child: Text("Already have an account?  Sign In"),
+                   Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account?",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.032,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Get.toNamed("login");
+                          },
+                          child: Text(
+                            "Sign In",
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.033,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0XFF212E54),
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                   ],

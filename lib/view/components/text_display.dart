@@ -13,6 +13,7 @@ import 'package:listenary/view/components/definition_overlay.dart';
 import 'package:listenary/view/components/executions.dart';
 
 class TextDisplay extends StatefulWidget {
+  bool isDarkMode;
   final int currentSentenceIndex;
   final List<String> sentences;
   String selectedFontFamily = 'Inter';
@@ -28,6 +29,7 @@ class TextDisplay extends StatefulWidget {
   TextDisplay({
     super.key,
     this.book,
+    required this.isDarkMode,
     required this.scaleFactor,
     required this.scrollController,
     required this.screenHeight,
@@ -46,7 +48,7 @@ class TextDisplay extends StatefulWidget {
 }
 
 class _TextDisplayState extends State<TextDisplay> {
-  String selectedLang = "ar";
+  //String selectedLang = "en";
 
   String cleanedWord = "";
 
@@ -63,32 +65,34 @@ class _TextDisplayState extends State<TextDisplay> {
   final searchController = Get.find<my_search.MySearchController>();
   Color selectedColor = Colors.blue; // اللون اللي يختاره المستخدم
   @override
+  late final StreamSubscription _notesSubscription;
+
   @override
-late final StreamSubscription _notesSubscription;
+  void initState() {
+    super.initState();
+    _loadNotes();
+    searchController.initializeSearch(widget.sentences);
+    searchController.attachToScrollController(widget.scrollController);
 
-@override
-void initState() {
-  super.initState();
-  _loadNotes();
-
-  // استماع لتغييرات temporaryNotes
-  _notesSubscription = mynoteController.temporaryNotes.listen((_) {
-    setState(() => _loadNotes());
-  });
-
-  // إذا كان هناك كتاب، نستمع لتغييراته أيضًا
-  if (widget.book != null) {
-    ever(widget.book!.notes, (_) {
+    // استماع لتغييرات temporaryNotes
+    _notesSubscription = mynoteController.temporaryNotes.listen((_) {
       setState(() => _loadNotes());
     });
-  }
-}
 
-@override
-void dispose() {
-  _notesSubscription.cancel(); // تنظيف الـ listener
-  super.dispose();
-}
+    // إذا كان هناك كتاب، نستمع لتغييراته أيضًا
+    if (widget.book != null) {
+      ever(widget.book!.notes, (_) {
+        setState(() => _loadNotes());
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _notesSubscription.cancel(); // تنظيف الـ listener
+    super.dispose();
+  }
+
   void _loadNotes() {
     notesMap.clear();
 
@@ -104,17 +108,92 @@ void dispose() {
       notesMap[note.sentenceIndex] = note;
     }
   }
- void _saveNote(Note note) {
-  setState(() {
-    if (widget.book != null) {
-      widget.book!.notes.removeWhere((n) => n.sentenceIndex == note.sentenceIndex);
-      widget.book!.notes.add(note); // سيعمل لأن notes أصبحت RxList
-    } else {
-      mynoteController.saveNote(note);
+
+  void _saveNote(Note note) {
+    setState(() {
+      if (widget.book != null) {
+        widget.book!.notes
+            .removeWhere((n) => n.sentenceIndex == note.sentenceIndex);
+        widget.book!.notes.add(note); // سيعمل لأن notes أصبحت RxList
+      } else {
+        mynoteController.saveNote(note);
+      }
+      notesMap[note.sentenceIndex] = note;
+    });
+  }
+
+  // These methods should be inside your widget class
+
+// Helper method to check if a word position contains a search match
+  bool _isInMatchRange(int sentenceIndex, int wordStartPos, int wordEndPos) {
+    if (!searchController.isSearching.value ||
+        searchController.searchTerm.value.isEmpty) {
+      return false;
     }
-    notesMap[note.sentenceIndex] = note;
-  });
-}
+
+    String currentWord = searchController.sentences[sentenceIndex]
+        .substring(
+            wordStartPos.clamp(
+                0, searchController.sentences[sentenceIndex].length),
+            wordEndPos.clamp(
+                0, searchController.sentences[sentenceIndex].length))
+        .toLowerCase();
+
+    String searchTermLower = searchController.searchTerm.value.toLowerCase();
+
+    // Check if this word or part of it matches the search term
+    return currentWord.contains(searchTermLower) ||
+        searchTermLower.contains(currentWord);
+  }
+
+// Helper method to check if a position is in the current match
+  bool _isInCurrentMatch(int sentenceIndex, int wordStartPos, int wordEndPos) {
+    if (searchController.matchIndexes.isEmpty) return false;
+
+    final currentMatch =
+        searchController.matchIndexes[searchController.currentMatchIndex.value];
+    if (currentMatch.sentenceIndex != sentenceIndex) return false;
+
+    // Check if there's any overlap between the word and current match
+    return (wordStartPos <= currentMatch.endPos &&
+        wordEndPos >= currentMatch.startPos);
+  }
+
+  Color _getWordColor(String word, int sentenceIndex, int wordPosition) {
+    // Track the position of this word
+    int wordStartPos = wordPosition;
+    int wordEndPos = wordPosition + word.length;
+
+    if (searchController.isSearching.value &&
+        _isInMatchRange(sentenceIndex, wordStartPos, wordEndPos) &&
+        sentenceIndex == widget.currentSentenceIndex) {
+      return Colors.blue;
+    }
+
+    if (word.toLowerCase() == widget.highlightedWord?.toLowerCase()) {
+      return Colors.blue;
+    } else if (sentenceIndex == widget.currentSentenceIndex) {
+      return const Color(0xffFEC838);
+    } else if (searchController.isSearching.value &&
+        _isInMatchRange(sentenceIndex, wordStartPos, wordEndPos)) {
+      return Colors.blue;
+    }
+
+    return Colors.grey.shade600;
+  }
+
+  Color? _getWordBackground(String word, int sentenceIndex, int wordPosition) {
+    // Track the position of this word
+    int wordStartPos = wordPosition;
+    int wordEndPos = wordPosition + word.length;
+
+    if (searchController.isSearching.value &&
+        _isInCurrentMatch(sentenceIndex, wordStartPos, wordEndPos)) {
+      return Colors.blue[200];
+    }
+
+    return null;
+  }
 
   Future<void> _showNoteDialog({
     required BuildContext context,
@@ -141,26 +220,28 @@ void dispose() {
                   icon: Icon(
                     Icons.delete,
                     color: Colors.grey[700],
-                    size: widget.screenWidth * 0.04,
+                    size: widget.screenWidth * 0.05,
                   ),
                   onPressed: () {
-  setState(() {
-    if (widget.book != null) {
-      widget.book?.notes.removeWhere(
-        (note) => note.sentenceIndex == sentenceIndex
-      );
-    } else {
-      mynoteController.deleteNote(sentenceIndex);
-    }
-    notesMap.remove(sentenceIndex);
-  });
-  Get.back();
-},
+                    setState(() {
+                      if (widget.book != null) {
+                        widget.book?.notes.removeWhere(
+                            (note) => note.sentenceIndex == sentenceIndex);
+                      } else {
+                        mynoteController.deleteNote(sentenceIndex);
+                      }
+                      notesMap.remove(sentenceIndex);
+                    });
+                    Get.back();
+                  },
                 ),
               ],
             ),
             backgroundColor: Colors.white,
-            title: Text("Add a Note"),
+            title: Text(
+              "Add a Note",
+              style: TextStyle(fontSize: widget.screenWidth * 0.04),
+            ),
             actionsPadding:
                 EdgeInsets.symmetric(vertical: widget.screenHeight * 0.015),
             content: Column(
@@ -191,7 +272,9 @@ void dispose() {
                   children: [
                     Text(
                       "Note color: ",
-                      style: TextStyle(fontSize: widget.screenWidth * 0.02),
+                      style: TextStyle(
+                          fontSize: widget.screenWidth * 0.025,
+                          fontWeight: FontWeight.bold),
                     ),
                     ...[
                       Colors.blue,
@@ -209,8 +292,8 @@ void dispose() {
                         },
                         child: Container(
                           margin: EdgeInsets.symmetric(horizontal: 4),
-                          width: 40,
-                          height: 40,
+                          width: widget.screenWidth * 0.052,
+                          height: widget.screenWidth * 0.052,
                           decoration: BoxDecoration(
                             color: color,
                             shape: BoxShape.circle,
@@ -290,10 +373,13 @@ void dispose() {
           slivers: [
             if (searchController.isSearching.value)
               SliverAppBar(
-                leadingWidth: widget.screenWidth * 0.25,
+                leadingWidth: widget.screenWidth * 0.5,
+                titleSpacing: 0,
                 backgroundColor: Colors.white,
                 surfaceTintColor: Colors.transparent,
-                flexibleSpace: Container(color: Colors.white),
+                flexibleSpace: Container(
+                    color:
+                        widget.isDarkMode ? Color(0xFF212E54) : Colors.white),
                 forceElevated: true,
                 elevation: 0,
                 pinned: true,
@@ -301,33 +387,47 @@ void dispose() {
                 leading: Row(
                   children: [
                     IconButton(
-                      iconSize: 20,
+                      iconSize: widget.screenWidth * 0.038,
+                      color:
+                          widget.isDarkMode ? Colors.white : Color(0xFF212E54),
                       icon: Icon(Icons.arrow_back),
                       onPressed: searchController.previousMatch,
                     ),
                     Obx(
                       () => Text(
                         '${searchController.currentMatchIndex.value + 1} of ${searchController.matchIndexes.length}',
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(
+                            fontSize: widget.screenWidth * 0.038,
+                            color: widget.isDarkMode
+                                ? Colors.white
+                                : Color(0xFF212E54)),
                       ),
                     ),
                     IconButton(
-                      iconSize: 20,
+                      iconSize: widget.screenWidth * 0.038,
                       icon: Icon(Icons.arrow_forward),
+                      color:
+                          widget.isDarkMode ? Colors.white : Color(0xFF212E54),
                       onPressed: searchController.nextMatch,
                     ),
                   ],
                 ),
                 title: Container(
                   width: widget.screenWidth * 0.5,
-                  color: Colors.white,
+                  color: widget.isDarkMode ? Color(0xFF212E54) : Colors.white,
                   padding: EdgeInsets.all(8),
                   child: TextField(
                     controller: searchController.textController,
-                    onChanged: (value) =>
-                        searchController.updateSearchTerm(value),
+                    onChanged: (value) {
+                      searchController.updateSearchTerm(value);
+                    },
                     decoration: InputDecoration(
                       hintText: 'Search...',
+                      hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDarkMode
+                              ? Colors.white
+                              : Color(0xFF212E54)),
                       border: InputBorder.none,
                     ),
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -337,6 +437,8 @@ void dispose() {
                 actions: [
                   IconButton(
                     icon: Icon(Icons.close),
+                    iconSize: widget.screenWidth * 0.045,
+                    color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
                     onPressed: searchController.close,
                   )
                 ],
@@ -346,171 +448,82 @@ void dispose() {
                 (context, sentenceIndex) {
                   String sentence = widget.sentences[sentenceIndex];
                   List<String> words = sentence.split(' ');
-
+                  bool isRTLText = isRTL(sentence);
                   return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0, vertical: 4.0),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: widget.screenWidth * 0.0095,
+                        vertical: widget.screenHeight * 0.003),
                     child: IntrinsicWidth(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
+                        textDirection:
+                            isRTLText ? TextDirection.rtl : TextDirection.ltr,
                         children: [
-                          Flexible(
-                            child: RichText(
-                              text: TextSpan(
-                                children: words.map((word) {
-                                  return TextSpan(
-                                    text: "$word ",
-                                    style: TextStyle(
-                                      fontSize: 16 * widget.scaleFactor,
-                                      fontFamily: widget.selectedFontFamily,
-                                      fontStyle: widget.selectedFontStyle,
-                                      fontWeight: widget.selectedFontWeight,
-                                      decoration: widget.selectedFontDecoration,
-                                      color: word.toLowerCase() ==
-                                              widget.highlightedWord
-                                                  ?.toLowerCase()
-                                          ? Colors.blue
-                                          : sentenceIndex ==
-                                                  widget.currentSentenceIndex
-                                              ? const Color(0xffFEC838)
-                                              : Colors.grey,
-                                      backgroundColor: word.toLowerCase() ==
-                                                  widget.highlightedWord
-                                                      ?.toLowerCase() &&
-                                              highlightController
-                                                  .highlightFromSearchOnly.value
-                                          ? Colors.blue.withOpacity(0.2)
-                                          : null,
-                                    ),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTapDown = (details) async {
-                                        final tapPosition =
-                                            details.globalPosition;
-                                        final selectedOption =
-                                            await showMenu<String>(
-                                          context: context,
-                                          position: RelativeRect.fromLTRB(
-                                            tapPosition.dx,
-                                            tapPosition.dy,
-                                            tapPosition.dx,
-                                            tapPosition.dy,
-                                          ),
-                                          items: [
-                                            PopupMenuItem(
-                                              value: 'define',
-                                              child: Text(
-                                                'Define "$word"',
-                                                style: TextStyle(
-                                                    fontSize:
-                                                        widget.screenWidth *
-                                                            0.02,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'note',
-                                              child: Text(
-                                                'Leave a note',
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      widget.screenWidth * 0.02,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ],
-                                        );
-
-                                        if (selectedOption == 'define') {
-                                          if (overlayController.isShowing)
-                                            return;
-                                          overlayController.show(
-                                            context: context,
-                                            isLoading: true,
-                                            position: tapPosition,
-                                            screenHeight: widget.screenHeight,
-                                            screenWidth: widget.screenWidth,
-                                            cleanedWord: word,
-                                            definitions: [],
-                                            selectedFontFamily:
-                                                widget.selectedFontFamily,
-                                            selectedLang: selectedLang,
-                                            onDismiss: () {
-                                              isLoading = false;
-                                            },
-                                          );
-                                          definitions = await fetchDefinition(
-                                              word,
-                                              selectedLang: selectedLang);
-                                          overlayController.dismiss();
-                                          overlayController.show(
-                                            context: context,
-                                            isLoading: false,
-                                            position: tapPosition,
-                                            screenHeight: widget.screenHeight,
-                                            screenWidth: widget.screenWidth,
-                                            cleanedWord: word,
-                                            definitions: definitions,
-                                            selectedFontFamily:
-                                                widget.selectedFontFamily,
-                                            selectedLang: selectedLang,
-                                            onDismiss: () {},
-                                          );
-                                        } else if (selectedOption == 'note') {
-                                          _showNoteDialog(
-                                            initialValue:
-                                                notesMap[sentenceIndex]
-                                                    ?.noteContent,
-                                            context: context,
-                                            sentenceIndex: sentenceIndex,
-                                            onSave: (noteText, pinColor) {
-                                              final newNote = Note(
-                                                booktitle:
-                                                    widget.book?.booktitle ??
-                                                        'Temporary Note',
-                                                noteContent: noteText,
-                                                color: pinColor,
-                                                sentenceIndex: sentenceIndex,
-                                              );
-                                              _saveNote(newNote);
-                                            },
-                                          );
-                                        }
-                                      },
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ),
-                          if (notesMap.containsKey(sentenceIndex))
+                          // For RTL, put the pin first
+                          if (isRTLText && notesMap.containsKey(sentenceIndex))
                             IconButton(
                               icon: SvgPicture.asset(
                                 "assets/Icons/pin.svg",
                                 color: notesMap[sentenceIndex]!.color,
-                                height: 30,
-                                width: 30,
+                                height: widget.screenWidth * 0.07,
+                                width: widget.screenWidth * 0.07,
                               ),
-                              onPressed: () {
-                                _showNoteDialog(
-                                  initialValue:
-                                      notesMap[sentenceIndex]?.noteContent,
-                                  context: context,
-                                  sentenceIndex: sentenceIndex,
-                                  onSave: (noteText, pinColor) {
-                                    final newNote = Note(
-                                      booktitle: widget.book?.booktitle ??
-                                          'Temporary Note',
-                                      noteContent: noteText,
-                                      color: pinColor,
-                                      sentenceIndex: sentenceIndex,
-                                    );
-                                    _saveNote(newNote);
-                                  },
-                                );
-                              },
+                              onPressed: () => _showNoteDialog(
+                                initialValue:
+                                    notesMap[sentenceIndex]?.noteContent,
+                                context: context,
+                                sentenceIndex: sentenceIndex,
+                                onSave: (noteText, pinColor) {
+                                  final newNote = Note(
+                                    booktitle: widget.book?.booktitle ??
+                                        'Temporary Note',
+                                    noteContent: noteText,
+                                    color: pinColor,
+                                    sentenceIndex: sentenceIndex,
+                                  );
+                                  _saveNote(newNote);
+                                },
+                              ),
+                            ),
+                          Flexible(
+                            child: Obx(
+                              () => RichText(
+                                // Add textDirection here
+                                textDirection: isRTLText
+                                    ? TextDirection.rtl
+                                    : TextDirection.ltr,
+                                text: TextSpan(
+                                  children:
+                                      _buildTextSpans(sentence, sentenceIndex),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // For LTR, put the pin after
+                          if (!isRTLText && notesMap.containsKey(sentenceIndex))
+                            IconButton(
+                              icon: SvgPicture.asset(
+                                "assets/Icons/pin.svg",
+                                color: notesMap[sentenceIndex]!.color,
+                                height: widget.screenWidth * 0.07,
+                                width: widget.screenWidth * 0.07,
+                              ),
+                              onPressed: () => _showNoteDialog(
+                                initialValue:
+                                    notesMap[sentenceIndex]?.noteContent,
+                                context: context,
+                                sentenceIndex: sentenceIndex,
+                                onSave: (noteText, pinColor) {
+                                  final newNote = Note(
+                                    booktitle: widget.book?.booktitle ??
+                                        'Temporary Note',
+                                    noteContent: noteText,
+                                    color: pinColor,
+                                    sentenceIndex: sentenceIndex,
+                                  );
+                                  _saveNote(newNote);
+                                },
+                              ),
                             ),
                         ],
                       ),
@@ -528,4 +541,151 @@ void dispose() {
       }),
     );
   }
+
+  List<InlineSpan> _buildTextSpans(String sentence, int sentenceIndex) {
+    List<InlineSpan> spans = [];
+    List<String> words = sentence.split(' ');
+
+    // Keep track of character position within the sentence
+    int currentPosition = 0;
+
+    for (int i = 0; i < words.length; i++) {
+      String word = words[i];
+
+      // Store the start position of this word
+      int wordPosition = currentPosition;
+
+      // Add the word with appropriate styling
+      spans.add(
+        TextSpan(
+          text: "$word",
+          style: TextStyle(
+              fontSize: widget.screenWidth * 0.05 * widget.scaleFactor,
+              fontFamily: widget.selectedFontFamily,
+              fontStyle: widget.selectedFontStyle,
+              fontWeight: widget.selectedFontWeight,
+              decoration: widget.selectedFontDecoration,
+              backgroundColor:
+                  _getWordBackground(word, sentenceIndex, wordPosition),
+              color: _getWordColor(word, sentenceIndex, wordPosition)),
+          recognizer: TapGestureRecognizer()
+            ..onTapDown = (details) async {
+              // Your existing tap handler code here
+              final tapPosition = details.globalPosition;
+              final selectedOption = await showMenu<String>(
+                // Your existing showMenu code
+                context: context,
+                position: RelativeRect.fromLTRB(
+                  tapPosition.dx,
+                  tapPosition.dy,
+                  tapPosition.dx,
+                  tapPosition.dy,
+                ),
+                items: [
+                  PopupMenuItem(
+                    value: 'define',
+                    child: Text(
+                      'Define "${word.replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), '')}"',
+                      style: TextStyle(
+                          fontSize: widget.screenWidth * 0.038,
+                          fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'note',
+                    child: Text(
+                      'Leave a note',
+                      style: TextStyle(
+                        fontSize: widget.screenWidth * 0.038,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              );
+
+              // Your existing option handling code
+              if (selectedOption == 'define') {
+                // Definition handling code
+                if (overlayController.isShowing) return;
+                overlayController.show(
+                  context: context,
+                  isLoading: true,
+                  position: tapPosition,
+                  screenHeight: widget.screenHeight,
+                  screenWidth: widget.screenWidth,
+                  cleanedWord:
+                      word.replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), ''),
+                  definitions: [],
+                  selectedFontFamily: widget.selectedFontFamily,
+                  wordLang: isArabic(word),
+                  onDismiss: () {
+                    isLoading = false;
+                  },
+                );
+                definitions =
+                    await fetchDefinition(word, wordLang: isArabic(word));
+                overlayController.dismiss();
+                overlayController.show(
+                  context: context,
+                  isLoading: false,
+                  position: tapPosition,
+                  screenHeight: widget.screenHeight,
+                  screenWidth: widget.screenWidth,
+                  cleanedWord:
+                      word.replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), ''),
+                  definitions: definitions,
+                  selectedFontFamily: widget.selectedFontFamily,
+                  wordLang: isArabic(word),
+                  onDismiss: () {},
+                );
+              } else if (selectedOption == 'note') {
+                // Note handling code
+                _showNoteDialog(
+                  initialValue: notesMap[sentenceIndex]?.noteContent,
+                  context: context,
+                  sentenceIndex: sentenceIndex,
+                  onSave: (noteText, pinColor) {
+                    final newNote = Note(
+                      booktitle: widget.book?.booktitle ?? 'Temporary Note',
+                      noteContent: noteText,
+                      color: pinColor,
+                      sentenceIndex: sentenceIndex,
+                    );
+                    _saveNote(newNote);
+                  },
+                );
+              }
+            },
+        ),
+      );
+
+      // Update position for the next word
+      currentPosition += word.length;
+
+      // Add a space after each word (except the last one)
+      if (i < words.length - 1) {
+        spans.add(TextSpan(
+          text: " ",
+          style: TextStyle(
+            fontSize: widget.screenWidth * 0.05 * widget.scaleFactor,
+            fontFamily: widget.selectedFontFamily,
+            fontStyle: widget.selectedFontStyle,
+            fontWeight: widget.selectedFontWeight,
+            decoration: widget.selectedFontDecoration,
+          ),
+        ));
+        currentPosition += 1; // Account for the space
+      }
+    }
+
+    return spans;
+  }
+}
+
+bool isRTL(String text) {
+  // Check if text contains Arabic characters
+  return RegExp(r'[\u0600-\u06FF]').hasMatch(text);
 }

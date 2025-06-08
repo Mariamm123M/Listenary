@@ -7,13 +7,16 @@ class PlayerControllers extends StatelessWidget {
   final VoidCallback onSkipForward;
   final VoidCallback onChangeSpeed;
   final VoidCallback onToggleVoice;
+  final VoidCallback onRestart; // Added restart functionality
   final String imagePath;
   final double playbackSpeed;
   final Widget slider;
   final bool isSwitchingVoice;
   final bool isDarkMode;
+  final bool isLoading;
 
-  const PlayerControllers({
+  PlayerControllers({
+    required this.isLoading,
     required this.isDarkMode,
     required this.isPlaying,
     required this.onPlayPause,
@@ -25,6 +28,7 @@ class PlayerControllers extends StatelessWidget {
     required this.playbackSpeed,
     required this.slider,
     required this.isSwitchingVoice,
+    required this.onRestart, // Optional parameter
   });
 
   @override
@@ -51,33 +55,42 @@ class PlayerControllers extends StatelessWidget {
                     icon: Icon(Icons.replay_10),
                     onPressed: onSkipBackward,
                     iconSize: 30,
-                    color:  isDarkMode
-                                  ? Color(0xFF212E54)
-                                  : Colors.white,
+                    color: isDarkMode ? Color(0xFF212E54) : Colors.white,
+                    tooltip: '10 seconds backward',
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color:isDarkMode
-                                    ? Color(0xFF212E54)
-                                    : Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                      onPressed: onPlayPause,
-                      iconSize: 30,
-                      color:  isDarkMode ? Colors.white : Colors.black,
-                    ),
-                  ),
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? Color(0xFF212E54) : Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: isLoading
+                          ? Container(
+                              width: 48,
+                              height: 48,
+                              padding: EdgeInsets.all(8),
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).primaryColor,
+                                ),
+                                strokeWidth: 3.0,
+                              ),
+                            )
+                          : IconButton(
+                              icon: Icon(
+                                  isPlaying ? Icons.pause : Icons.play_arrow),
+                              iconSize: 30,
+                              color: isDarkMode ? Colors.white : Color(0xFF212E54),
+                              onPressed: onPlayPause,
+                               tooltip: isPlaying ? 'Pause' : 'Play',
+                            )),
                   IconButton(
                     icon: Icon(Icons.forward_10),
                     onPressed: onSkipForward,
                     iconSize: 30,
-                    color:  isDarkMode
-                                  ? Color(0xFF212E54)
-                                  : Colors.white,
+                    color: isDarkMode ? Color(0xFF212E54) : Colors.white,
+                    tooltip: '10 seconds forward',
                   ),
                 ],
               ),

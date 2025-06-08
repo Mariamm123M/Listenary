@@ -4,8 +4,12 @@ import 'package:translator/translator.dart';
 class TranslateDialog extends StatefulWidget {
   final bool isDarkMode;
   final String? initial;
+  String? fromLanguage = 'English';
+  String? toLanguage = 'Arabic';
 
-  const TranslateDialog({Key? key, required this.isDarkMode, this.initial}) : super(key: key);
+
+  TranslateDialog({Key? key, required this.isDarkMode, this.initial, this.fromLanguage = 'English', 
+  this.toLanguage = 'Arabic'}) : super(key: key);
 
   @override
   _TranslateDialogState createState() => _TranslateDialogState();
@@ -29,14 +33,12 @@ class _TranslateDialogState extends State<TranslateDialog> {
     'Hindi': 'hi',
   };
 
-  String? _fromLanguage = 'English';
-  String? _toLanguage = 'Arabic';
-
+ 
   Future<void> _translateText() async {
     if (_textController.text.isNotEmpty) {
       try {
-        final fromLang = _languages[_fromLanguage]!;
-        final toLang = _languages[_toLanguage]!;
+        final fromLang = _languages[widget.fromLanguage]!;
+        final toLang = _languages[widget.toLanguage]!;
 
         final translation = await _translator.translate(
           _textController.text,
@@ -98,10 +100,10 @@ void dispose() {
         canvasColor: Colors.white, // Background color for dropdown items
       ),
       child: DropdownButton<String>(
-        value: _fromLanguage,
+        value: widget.fromLanguage,
         onChanged: (String? newValue) {
           setState(() {
-            _fromLanguage = newValue;
+            widget.fromLanguage = newValue;
           });
           _translateText();
         },
@@ -140,10 +142,10 @@ void dispose() {
                         ),
                       ),
                       DropdownButton<String>(
-                        value: _toLanguage,
+                        value: widget.toLanguage,
                         onChanged: (String? newValue) {
                           setState(() {
-                            _toLanguage = newValue;
+                            widget.toLanguage = newValue;
                           });
                           _translateText();
                         },
