@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:translator/translator.dart';
 
 class TranslateDialog extends StatefulWidget {
@@ -225,10 +226,10 @@ void dispose() {
           ),
           child: TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Get.back();
             },
             child: Text(
-              'Close',
+              'close'.tr,
               style: TextStyle(
                 color: widget.isDarkMode ? Color(0xFF212E54) : Colors.white,
               ),

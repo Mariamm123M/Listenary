@@ -23,7 +23,7 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  String name = "User";
+  String name = "User".tr;
   String? _imagePath;
   final ImagePicker _picker = ImagePicker();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -40,7 +40,7 @@ class _ProfileState extends State<Profile> {
   void _getUserName() {
     User? user = _auth.currentUser;
     setState(() {
-      name = user?.displayName ?? "User";
+      name = user?.displayName ?? "User".tr;
     });
   }
 
@@ -84,7 +84,7 @@ class _ProfileState extends State<Profile> {
   Future<void> pickImageFromGallery() async {
     bool hasPermission = await checkStoragePermission();
     if (!hasPermission) {
-      Get.snackbar("Error", "Storage permission denied");
+      Get.snackbar("Error".tr, "Storage permission denied".tr);
       return;
     }
 
@@ -97,7 +97,7 @@ class _ProfileState extends State<Profile> {
   Future<void> _takePhotoWithCamera() async {
     bool hasPermission = await checkCameraPermission();
     if (!hasPermission) {
-      Get.snackbar("Error", "Camera permission denied");
+      Get.snackbar("Error".tr, "Camera permission denied".tr);
       return;
     }
 
@@ -117,7 +117,7 @@ class _ProfileState extends State<Profile> {
         maxWidth: 700,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Image profile cropping',
+            toolbarTitle: 'Image profile cropping'.tr,
             backgroundColor: const Color(0xff212E54),
             toolbarColor: const Color(0xff212E54),
             toolbarWidgetColor: Colors.white,
@@ -132,7 +132,7 @@ class _ProfileState extends State<Profile> {
         await _saveProfileImage(imageFile);
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to process image: $e");
+      Get.snackbar("Error".tr, "Failed to process image: $e".tr);
     }
   }
 
@@ -159,7 +159,6 @@ class _ProfileState extends State<Profile> {
     final screenWidth = mediaQuery.size.width;
 
     return Drawer(
-      width: screenWidth * 0.55,
       child: Padding(
         padding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.025, vertical: screenHeight * 0.07),
@@ -212,7 +211,7 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.settings,
-              text: "Settings",
+              text: "Settings".tr,
               onTap: () {
                 Get.toNamed("settings");
               },
@@ -222,7 +221,7 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.help,
-              text: "Help Center",
+              text: "Help Center".tr,
               onTap: () {
                 Get.toNamed("help");
               },
@@ -232,9 +231,9 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.share_outlined,
-              text: "Share app",
+              text: "Share app".tr,
               onTap: () {
-                Share.share('Download my app here: $downloadLink');
+                Share.share('Download my app here: $downloadLink'.tr);
               },
             ),
             SizedBox(height: 3),
@@ -242,15 +241,15 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.logout_sharp,
-              text: "Log out",
+              text: "Log out".tr,
               onTap: () {
                 showDeleteDialog(
                   context: context,
                   screenHeight: screenHeight,
                   screenWidth: screenWidth,
-                  okText: "Log Out",
-                  title: "Logging Out",
-                  desc: "Are you sure you want to Log Out from Listenary?",
+                  okText: "Log Out".tr,
+                  title: "Logging Out".tr,
+                  desc: "Are you sure you want to Log Out from Listenary?".tr,
                   onDelete: () {
                     AuthService().signOut(context);
                   },
@@ -296,8 +295,8 @@ class _ProfileState extends State<Profile> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            "Choose option to change profile photo",
+          Text(
+            "Choose option to change profile photo".tr,
             style: TextStyle(
                 color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
           ),
@@ -306,7 +305,7 @@ class _ProfileState extends State<Profile> {
             children: [
               Expanded(
                 child: ListTile(
-                  title: const Text("Camera",
+                  title: Text("Camera".tr,
                       style: TextStyle(color: Colors.white, fontSize: 14)),
                   leading: const Icon(Icons.camera, color: Colors.white, size: 30),
                   onTap: () async {
@@ -317,7 +316,7 @@ class _ProfileState extends State<Profile> {
               ),
               Expanded(
                 child: ListTile(
-                  title: const Text("Gallery",
+                  title: Text("Gallery".tr,
                       style: TextStyle(color: Colors.white, fontSize: 14)),
                   leading: SvgPicture.asset("assets/Icons/gallery.svg",
                       color: Colors.white, height: 30, width: 30),
@@ -332,7 +331,7 @@ class _ProfileState extends State<Profile> {
           const SizedBox(height: 10),
           Expanded(
             child: ListTile(
-              title: const Text("Delete Profile Image",
+              title: Text("Delete Profile Image".tr,
                   style: TextStyle(color: Colors.white, fontSize: 14)),
               leading: Icon(Icons.delete, color: Colors.white, size: 30),
               onTap: () async {

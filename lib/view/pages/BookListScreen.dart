@@ -26,9 +26,9 @@ class _BookListScreenState extends State<BookListScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Book deleted"),
+        content: Text("book_deleted".tr),
         action: SnackBarAction(
-          label: 'Undo',
+          label: 'undo'.tr,
           onPressed: () {
             if (deletedBook != null && deletedBookIndex != null) {
               setState(() {
@@ -49,200 +49,200 @@ class _BookListScreenState extends State<BookListScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: EdgeInsets.only(bottom: height * 0.01),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding:
-                  EdgeInsets.only(left: width * 0.06, top: height * 0.05),
-                  child: Text(
-                    'My Books',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: width * 0.06,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF212E54),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(
-                      right: width * 0.06, top: height * 0.05),
-                  child: SvgPicture.asset(
-                    'assets/Icons/library2.svg',
-                    width: width * 0.08,
-                    height: width * 0.08,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: height * 0.01),
-            Expanded(
-                child: (controller.favoriteBooks.isEmpty)
-                    ? Center(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: width * 0.025),
-                      child: Text(
-                        "No saved books, Start saving one!",
-                        style: TextStyle(
-                            color: Colors.black.withOpacity(0.32),
-                            fontSize: width * 0.041,
-                            fontWeight: FontWeight.w600),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: height * 0.01),
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: width * 0.09, vertical: 0.095),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'my_books'.tr,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: width * 0.06,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF212E54),
                       ),
-                    ))
-                    : GetX<FavoriteBooksController>(builder: (controller) {
-                  return ListView.builder(
-                    itemCount: controller.favoriteBooks.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          Get.to(
-                                () => BookDetailScreen(
-                              book: controller.favoriteBooks[index],
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 375,
-                          height: 120,
-                          margin: EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                  width: 1, color: Color(0xFF25252552)),
-                            ),
+                    ),
+                    SvgPicture.asset(
+                      'assets/Icons/library2.svg',
+                      width: width * 0.08,
+                      height: width * 0.08,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: height * 0.01),
+              Expanded(
+                  child: (controller.favoriteBooks.isEmpty)
+                      ? Center(
+                          child: Padding(
+                          padding: EdgeInsets.only(left: width * 0.025),
+                          child: Text(
+                            "no_saved_books".tr,
+                            style: TextStyle(
+                                color: Colors.black.withOpacity(0.32),
+                                fontSize: width * 0.041,
+                                fontWeight: FontWeight.w600),
                           ),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 4,
-                                left: 8,
+                        ))
+                      : GetX<FavoriteBooksController>(builder: (controller) {
+                          return ListView.builder(
+                            itemCount: controller.favoriteBooks.length,
+                            itemBuilder: (context, index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Get.to(
+                                    () => BookDetailScreen(
+                                      book: controller.favoriteBooks[index],
+                                    ),
+                                  );
+                                },
                                 child: Container(
-                                  width: 75,
-                                  height: 112,
+                                  width: 375,
+                                  height: 120,
+                                  margin: EdgeInsets.only(bottom: 8),
                                   decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: NetworkImage(controller.favoriteBooks[index].bookimageURL),
-                                      fit: BoxFit.cover,
+                                    border: Border(
+                                      bottom: BorderSide(
+                                          width: 1, color: Color(0xFF25252552)),
                                     ),
                                   ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 9,
-                                left: 100,
-                                child: SizedBox(
-                                  width: 200,
-                                  height: 24,
-                                  child: Text(
-                                    controller
-                                        .favoriteBooks[index].booktitle,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: width * 0.04,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF212E54),
-                                    ),
-                                    overflow: TextOverflow.visible,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 33,
-                                left: 104,
-                                child: SizedBox(
-                                  width: 117,
-                                  height: 15,
-                                  child: Text(
-                                    controller
-                                        .favoriteBooks[index].author,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: width * 0.03,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0x91000000),
-                                    ),
-                                    overflow: TextOverflow.visible,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 2,
-                              ),
-                              Positioned(
-                                top: 45,
-                                left: 100,
-                                child: Container(
-                                  width: 108,
-                                  height: 64,
-                                  child: Row(
+                                  child: Stack(
                                     children: [
-                                      Container(
-                                        width: 40,
-                                        height: 40,
-                                        padding:
-                                        const EdgeInsets.fromLTRB(
-                                            5.33, 4, 6.67, 4),
-                                        child: Image.asset(
-                                          'assets/Icons/Headphones.png',
-                                          fit: BoxFit.contain,
+                                      Positioned(
+                                        top: 4,
+                                        left: 8,
+                                        child: Container(
+                                          width: 75,
+                                          height: 112,
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image: NetworkImage(controller
+                                                  .favoriteBooks[index]
+                                                  .bookimageURL),
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 0),
+                                      Positioned(
+                                        top: 9,
+                                        left: 100,
                                         child: SizedBox(
-                                          width: 54,
+                                          width: 200,
+                                          height: 24,
+                                          child: Text(
+                                            controller
+                                                .favoriteBooks[index].booktitle,
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: width * 0.04,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF212E54),
+                                            ),
+                                            overflow: TextOverflow.visible,
+                                            maxLines: 1,
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 33,
+                                        left: 104,
+                                        child: SizedBox(
+                                          width: 117,
                                           height: 15,
                                           child: Text(
-                                            "Play Now",
+                                            controller
+                                                .favoriteBooks[index].author,
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               fontSize: width * 0.03,
-                                              fontWeight:
-                                              FontWeight.w700,
-                                              color: const Color(
-                                                  0xFF212E54),
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0x91000000),
                                             ),
-                                            overflow:
-                                            TextOverflow.visible,
+                                            overflow: TextOverflow.visible,
                                             maxLines: 1,
                                             softWrap: false,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 2,
+                                      ),
+                                      Positioned(
+                                        top: 45,
+                                        left: 100,
+                                        child: Container(
+                                          width: 108,
+                                          height: 64,
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 40,
+                                                height: 40,
+                                                padding:
+                                                    const EdgeInsets.fromLTRB(
+                                                        5.33, 4, 6.67, 4),
+                                                child: Image.asset(
+                                                  'assets/Icons/Headphones.png',
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 0),
+                                                child: SizedBox(
+                                                  width: 54,
+                                                  height: 15,
+                                                  child: Text(
+                                                    "Play Now",
+                                                    style: TextStyle(
+                                                      fontFamily: 'Inter',
+                                                      fontSize: width * 0.03,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: const Color(
+                                                          0xFF212E54),
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.visible,
+                                                    maxLines: 1,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 54,
+                                        left: 288,
+                                        child: GestureDetector(
+                                          onTap: () => _deleteBook(index),
+                                          child: SvgPicture.asset(
+                                            'assets/Icons/delete.svg',
+                                            width: 28,
+                                            height: 28,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                top: 54,
-                                left: 288,
-                                child: GestureDetector(
-                                  onTap: () => _deleteBook(index),
-                                  child: SvgPicture.asset(
-                                    'assets/Icons/delete.svg',
-                                    width: 28,
-                                    height: 28,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                })),
-          ],
+                              );
+                            },
+                          );
+                        })),
+            ],
+          ),
         ),
       ),
     );

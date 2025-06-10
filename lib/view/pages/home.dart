@@ -5,9 +5,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/controller/recent_books_controller.dart';
 import 'package:listenary/model/book_model.dart';
+import 'package:listenary/view/components/chracters_dialog.dart';
 import 'package:listenary/view/components/library_card.dart';
 import 'package:listenary/view/components/recently_card.dart';
-import 'package:listenary/view/pages/SearchPage.dart';
 import 'package:listenary/view/pages/chatBot.dart';
 import 'package:listenary/view/pages/profile.dart';
 import 'dart:io';
@@ -29,16 +29,53 @@ class _HomeState extends State<Home> {
 
   List<Book> libraryBooks = [];
   bool isLoading = true;
+Book book = Book(
+  bookId: 2,
+  booktitle: "Humans: A Deep Dive into Human Nature",
+  author: "Nour Abdullah",
+  bookimageURL: "https://example.com/images/human_nature.jpg",
+  rating: 4.8,
+  pages: 512,
+  language: "English",
+  description:
+      "This comprehensive book takes a profound journey into the emotional, psychological, and philosophical makeup of what it means to be human. "
+      "It explores how identity is formed, how emotions shape our experiences, and how society influences our behavior. "
+      "Each chapter is carefully structured to unpack complex human experiences in a relatable and thought-provoking manner.",
+  bookcontent:
+      "Chapter 1: The Roots of Identity\n"
+      "From the moment we are born, we begin to form a sense of who we are. Our identity is not static—it evolves with every experience and interaction. "
+      "This chapter examines how culture, upbringing, trauma, and environment contribute to our understanding of self.\n\n"
+      
+      "Chapter 2: Emotional Intelligence\n"
+      "Understanding and managing emotions is critical to our relationships and personal growth. This chapter delves into the science of emotional regulation, "
+      "empathy, and the connection between emotional health and decision-making.\n\n"
+      
+      "Chapter 3: The Human Condition\n"
+      "To be human is to struggle, to question, to hope. This chapter reflects on the philosophical inquiries that have followed humanity for centuries—"
+      "from the search for purpose to the inevitability of mortality.\n\n"
+      
+      "Chapter 4: Social Mirrors\n"
+      "We are shaped by the people around us. This chapter explores social dynamics, peer pressure, community belonging, and how feedback from others can enhance or distort self-perception.\n\n"
+      
+      "Chapter 5: Beyond the Self\n"
+      "Can we rise above ego and personal gain? This final chapter challenges the reader to think of humanity as a collective and asks: what does it mean to live for others as much as for ourselves?\n\n"
+      
+      "Conclusion:\n"
+      "Understanding human nature is a lifelong journey, one that invites curiosity, compassion, and courage. This book is only the beginning of that path.",
+  audioFilePath: "https://example.com/audio/deep_dive_humans.mp3",
+  category: "Psychology & Philosophy",
+);
 
   List<String> categories = [
-    'Autobiography',
-    'Children',
-    'Comedy',
-    'Drama',
-    'Horror',
-    'History',
-    'Mystery',
-    'Science Fiction'
+    "drama".tr,
+    "romantic".tr,
+    "science_fiction".tr,
+    "children".tr,
+    "comedy".tr,
+    "crime".tr,
+    "horror".tr,
+    "biography".tr,
+    "history".tr
   ];
   String? selectedCategory;
 
@@ -105,7 +142,7 @@ class _HomeState extends State<Home> {
     final List<Book> filteredBooks = selectedCategory == null
         ? libraryBooks
         : libraryBooks.where((book) {
-            final category = book.category?.toLowerCase() ?? '';
+            final category = book.category.toLowerCase() ?? '';
             return category == selectedCategory!.toLowerCase();
           }).toList();
 
@@ -126,7 +163,7 @@ class _HomeState extends State<Home> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Hello, ${name.capitalize!}",
+                    'hello'.tr + '${name.capitalize!}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: screenWidth * 0.045,
@@ -134,7 +171,8 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   ProfileImage(
-                    radius: 0.06,
+                    radius: 0.03,
+                    number: 0.15,
                     screenWidth: screenHeight,
                     imageFile: _imagePath,
                     onTap: () {
@@ -158,14 +196,14 @@ class _HomeState extends State<Home> {
                       child: (controller.recentBooks.isEmpty)
                           ? Padding(
                               padding: EdgeInsets.only(
-                                  top: screenWidth * 0.25,
+                                  top: screenWidth * 0.3,
                                   right: screenWidth * 0.02),
                               child: Column(
                                 children: [
                                   searchBar(screenWidth, screenHeight),
                                   SizedBox(height: screenWidth * 0.05),
                                   Text(
-                                    "No recent books, Start reading a new one!",
+                                      "no_recent_books".tr,
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: screenWidth * 0.032,
@@ -187,7 +225,7 @@ class _HomeState extends State<Home> {
                                 Row(
                                   children: [
                                     Text(
-                                      "Continue",
+                                      "continue".tr,
                                       style: TextStyle(
                                         fontSize: screenWidth * 0.04,
                                         fontWeight: FontWeight.w700,
@@ -227,7 +265,7 @@ class _HomeState extends State<Home> {
                 children: [
                   Row(
                     children: [
-                      Text('Categories',
+                      Text('categories'.tr,
                           style: TextStyle(
                               fontSize: screenWidth * 0.045,
                               fontWeight: FontWeight.w600,
@@ -251,7 +289,7 @@ class _HomeState extends State<Home> {
                         SizedBox(
                           width: 8,
                         ),
-                        Text('Ask Book Expert?',
+                        Text('Ask_Book_Expert?'.tr,
                             style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: screenWidth * 0.032,
@@ -345,7 +383,13 @@ class _HomeState extends State<Home> {
   Widget searchBar(double screenWidth, double screenHeight) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => SearchPage());
+      Get.dialog(
+                        Dialog(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                          child: CharctersDialog(book: book),
+                        ),);
+       /* Get.to(() => SearchPage());*/
       },
       child: Container(
         decoration: BoxDecoration(
@@ -363,7 +407,7 @@ class _HomeState extends State<Home> {
               const Icon(Icons.search, color: Color(0xff212E54)),
               const SizedBox(width: 8),
               Text(
-                "Search",
+                  "search".tr,
                 style: TextStyle(
                   color: const Color(0xff212E54),
                   fontSize: screenWidth * 0.032,

@@ -15,7 +15,7 @@ class Book {
   final String bookcontent;
   final String category;
   RxList<Note> notes = <Note>[].obs;    // ده زيادة محتاج يتهندل ف الباك ايند
-
+//book userid note
   Book({
     required this.bookId,
     required this.booktitle,

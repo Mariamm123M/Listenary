@@ -43,14 +43,15 @@ class _LoginState extends State<Login> {
                   children: [
                     Icon(
                       Icons.arrow_back_rounded,
-                      size: screenWidth * 0.05,
+                      size: screenWidth * 0.055,
                     ),
                     SizedBox(width: screenWidth * 0.02),
                     Text(
-                      "Back",
+                       'back'.tr,
+
                       style: TextStyle(
                         color: const Color(0XFF212E54),
-                        fontSize: screenWidth * 0.035,
+                        fontSize: screenWidth * 0.04,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Inter',
                       ),
@@ -72,7 +73,7 @@ class _LoginState extends State<Login> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Welcome Back",
+                       'welcome_back'.tr,
                       style: TextStyle(
                         color: const Color(0XFF212E54),
                         fontSize: screenWidth * 0.055,
@@ -82,7 +83,7 @@ class _LoginState extends State<Login> {
                     ),
                     SizedBox(height: screenHeight * 0.01),
                     Text(
-                      "Sign In to continue",
+                      'sign_in_continue'.tr,
                       style: TextStyle(
                         color: const Color(0XFF787878),
                         fontSize: screenWidth * 0.04,
@@ -95,13 +96,13 @@ class _LoginState extends State<Login> {
                     // Email Field
                     buildTextFormField(
                       screenWidth: screenWidth,
-                      hint: "Email",
+                      hint: 'email'.tr,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please enter your email";
+                          return 'please_enter_email'.tr;
                         } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
                             .hasMatch(value)) {
-                          return "Enter a valid email";
+                          return 'enter_valid_email'.tr;
                         }
                         return null;
                       },
@@ -117,14 +118,14 @@ class _LoginState extends State<Login> {
                     // Password Field
                     buildTextFormField(
                       screenWidth: screenWidth,
-                      hint: "Password",
+                      hint:'password'.tr,
                       isObsecure: isObsecure,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please enter password";
+                          return 'please_enter_password'.tr;
                         }
                         if (value.length < 6) {
-                          return "Password must be at least 6 characters";
+                          return 'password_min_chars'.tr;
                         }
                         return null;
                       },
@@ -143,7 +144,7 @@ class _LoginState extends State<Login> {
                         icon: SvgPicture.asset("assets/Icons/eye.svg"),
                       ),
                     ),
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.1),
 
                     // Sign In Button
                     ElevatedButton(
@@ -157,8 +158,8 @@ class _LoginState extends State<Login> {
                           Get.offAll(() => const BottomNavBarScreen());
                         }
                       },
-                      child: const Text(
-                        "SIGN IN",
+                      child:  Text(
+                      "sign_in".tr,
                         style: TextStyle(fontFamily: 'Inter'),
                       ),
                     ),
@@ -166,7 +167,7 @@ class _LoginState extends State<Login> {
                     SizedBox(height: screenHeight * 0.02),
 
                     Text(
-                      "or Sign In using",
+                      'or_sign_in_using'.tr,
                       style: TextStyle(
                         color: const Color(0XFF787878),
                         fontSize: screenWidth * 0.04,
@@ -199,7 +200,7 @@ class _LoginState extends State<Login> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don’t have an account?",
+                     'dont_have_account'.tr,
                           style: TextStyle(
                             fontSize: screenWidth * 0.032,
                             fontWeight: FontWeight.w500,
@@ -211,11 +212,11 @@ class _LoginState extends State<Login> {
                             Get.toNamed("signup");
                           },
                           child: Text(
-                            "Sign Up",
+                            'sign_up'.tr,
                             style: TextStyle(
                               fontSize: screenWidth * 0.033,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0XFF212E54),
+                              color: Colors.blue,
                               fontFamily: 'Inter',
                             ),
                           ),

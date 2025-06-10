@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/controller/highlightedController.dart';
 import 'package:listenary/controller/searchController.dart' as my_search;
@@ -299,14 +298,14 @@ class _ReadingPageState extends State<ReadingPage> {
             position: RelativeRect.fromLTRB(100.0, 100.0, 100.0, 100.0),
             items: [
               PopupMenuItem(
-                child: Text('Select Text'),
-                value: 'select_text',
-              ),
-              PopupMenuItem(
-                child: Text(
-                  isSummarized
-                      ? 'Reset to original content'
-                      : 'Summarize the whole page',
+                child: Text('Select Text'.tr),
+                    value: 'select_text',
+                  ),
+                  PopupMenuItem(
+                    child: Text(
+                      isSummarized
+                          ? 'Reset to original content'.tr
+                          : 'Summarize the whole page'.tr,
                   style: TextStyle(
                     color: isSummarized ? Colors.blueAccent : Colors.black,
                   ),
@@ -340,11 +339,11 @@ class _ReadingPageState extends State<ReadingPage> {
             position: RelativeRect.fromLTRB(100.0, 100.0, 100.0, 100.0),
             items: [
               PopupMenuItem(
-                child: Text('Select Text'),
+                child: Text('Select Text'.tr),
                 value: 'select_text',
               ),
               PopupMenuItem(
-                child: Text('Translate the whole page'),
+                 child: Text('Translate the whole page'.tr),
                 value: 'translateText',
               ),
             ],
@@ -364,17 +363,14 @@ class _ReadingPageState extends State<ReadingPage> {
                   return StatefulBuilder(
                     builder: (context, setState) {
                       return AlertDialog(
-                        title: Text("Select a language"),
-                        content: DropdownButton<String>(
-                          value: selectedLangCode,
-                          hint: Text("Choose language"),
-                          items: [
-                            DropdownMenuItem(
-                                value: 'en', child: Text("English")),
-                            DropdownMenuItem(
-                                value: 'ar', child: Text("Arabic")),
-                            DropdownMenuItem(
-                                value: 'fr', child: Text("French")),
+                       title: Text("Select a language".tr),
+                            content: DropdownButton<String>(
+                              value: selectedLangCode,
+                              hint: Text("Choose language".tr),
+                              items: [
+                                DropdownMenuItem(value: 'en', child: Text("English".tr)),
+                                DropdownMenuItem(value: 'ar', child: Text("Arabic".tr)),
+                                DropdownMenuItem(value: 'fr', child: Text("French".tr)),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -390,7 +386,7 @@ class _ReadingPageState extends State<ReadingPage> {
                                 _translateWholePage(selectedLangCode!);
                               }
                             },
-                            child: Text("Translate"),
+                            child: Text("Translate".tr),
                           )
                         ],
                       );

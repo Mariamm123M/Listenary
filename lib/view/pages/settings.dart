@@ -1,7 +1,6 @@
 // Settings.dart:
 
 import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -13,6 +12,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listenary/view/components/animation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 
 class UserSettings {
@@ -170,6 +171,7 @@ class _SettingsState extends State<Settings> {
   @override
   void initState() {
     super.initState();
+    loadSelectedLanguage();
     _user = _auth.currentUser;
     if (_user != null) {
       _loadUserSettings();
@@ -177,7 +179,13 @@ class _SettingsState extends State<Settings> {
     _getUserData();
     _loadProfileImage();
   }
-
+  void loadSelectedLanguage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? lang = prefs.getString('language') ?? 'en';
+    setState(() {
+      selectedLanguage = lang == 'en' ? 'English' : 'Arabic';
+    });
+  }
   void _getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     setState(() {
@@ -309,11 +317,16 @@ class _SettingsState extends State<Settings> {
                                       screenWidth: screenWidth,
                                       selectedCategory: selectedLanguage,
                                       category: "English",
-                                      onSelect: (category) {
+                                      onSelect: (category) async {
                                         //change to Engish theme
                                         setState(() {
                                           selectedLanguage = category;
                                         });
+                                        Get.updateLocale(const Locale('en'));
+
+                                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                                        prefs.setString('language', 'en');
+
                                         saveUserSettings();
                                       }),
                                   buildCustomRadioButton(
@@ -321,13 +334,18 @@ class _SettingsState extends State<Settings> {
                                       screenWidth: screenWidth,
                                       category: "Arabic",
                                       selectedCategory: selectedLanguage,
-                                      onSelect: (category) {
+                                      onSelect: (category) async {
                                         //change to Arabic theme
                                         setState(() {
                                           selectedLanguage = category;
                                         });
-                                        saveUserSettings();
-                                      })
+                                        Get.updateLocale(const Locale('ar'));
+
+                                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                                        prefs.setString('language', 'ar');
+                                        print('Language saved as: ${prefs.getString('language')}');
+
+                                        saveUserSettings();                                    })
                                 ],
                               )
                             ])
@@ -520,7 +538,7 @@ class _SpeakersState extends State<Speakers> {
     final dir = await getTemporaryDirectory();
     final filePath = '${dir.path}/speak_$index.mp3';
     final file = File(filePath);
-    
+
     if (await file.exists()) {
       return filePath;
     }
@@ -550,7 +568,7 @@ class _SpeakersState extends State<Speakers> {
         final dir = await getTemporaryDirectory();
         final filePath = '${dir.path}/speak_$index.mp3';
         final file = File(filePath);
-        
+
         await file.writeAsBytes(response.bodyBytes);
         _voiceFilePaths[index] = filePath;
       } else {

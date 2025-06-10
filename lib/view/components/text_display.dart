@@ -55,7 +55,7 @@ class _TextDisplayState extends State<TextDisplay> {
   List<String> definitions = [];
 
   bool isLoading = false;
-  final Map<int, Note> notesMap = {}; // <sentenceIndex, Note>
+  final Map<int, Note> notesMap = {}; // <sentenceIndex, Note> //temporary
 
   final DefinitionOverlayController overlayController =
       DefinitionOverlayController();
@@ -85,7 +85,8 @@ class _TextDisplayState extends State<TextDisplay> {
         setState(() => _loadNotes());
       });
     }
-  }
+  } //book
+  //uploaded
 
   @override
   void dispose() {
@@ -118,7 +119,7 @@ class _TextDisplayState extends State<TextDisplay> {
       } else {
         mynoteController.saveNote(note);
       }
-      notesMap[note.sentenceIndex] = note;
+      notesMap[note.sentenceIndex] = note; //temporary
     });
   }
 
@@ -130,7 +131,6 @@ class _TextDisplayState extends State<TextDisplay> {
         searchController.searchTerm.value.isEmpty) {
       return false;
     }
-
     String currentWord = searchController.sentences[sentenceIndex]
         .substring(
             wordStartPos.clamp(
