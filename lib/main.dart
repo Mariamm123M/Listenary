@@ -14,19 +14,30 @@ import 'package:listenary/view/pages/signup.dart' as signup_page;
 import 'package:listenary/view/pages/splash_Screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:listenary/lang/translations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,  // Ensure this is set
+    options: DefaultFirebaseOptions.currentPlatform, // Ensure this is set
   );
-  runApp(MyApp());
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String savedLang = prefs.getString('language') ?? 'en';
+  print("✅ Loaded language from prefs: $savedLang");
+
+  runApp(MyApp(lang: savedLang));
 }
 
+void saveLanguage(String lang) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('language', lang);
+}
 
-//File? imageFile
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
+  final String lang;
+  MyApp({super.key, required this.lang});
 
   FavoriteBooksController favorite_controller =
       Get.put(FavoriteBooksController(), permanent: true);
@@ -43,6 +54,18 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Listenary',
+      translations: AppTranslations(),
+      locale: Locale(lang),
+      fallbackLocale: const Locale('en'),
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Inter',
@@ -71,7 +94,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: SplashScreen(), 
+      home: SplashScreen(),
       //initialRoute: "/signup",
       getPages: [
         GetPage(name: "/", page: () => const SplashScreen()),
@@ -84,4 +107,9 @@ class MyApp extends StatelessWidget {
       ],
     );
   }
+}
+
+void onLanguageChanged(String lang) {
+  saveLanguage(lang);
+  Get.updateLocale(Locale(lang));
 }

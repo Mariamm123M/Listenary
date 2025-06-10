@@ -569,7 +569,6 @@ void _debugFullAuthState() async {
         searchController.searchTerm.value.isEmpty) {
       return false;
     }
-
     String currentWord = searchController.sentences[sentenceIndex]
         .substring(
             wordStartPos.clamp(

@@ -31,7 +31,7 @@ class _SearchPageState extends State<SearchPage> {
         books = booksData.map((bookData) => Book.fromJson(bookData)).toList();
       });
     } else {
-      throw Exception('Failed to load books');
+      throw Exception('Failed to load books'.tr);
     }
   }
 
@@ -68,7 +68,7 @@ class _SearchPageState extends State<SearchPage> {
             },
             icon: Icon(Icons.arrow_back_outlined, color: Colors.white)),
         title: Text(
-          'Search Books',
+          'Search Books'.tr,
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -86,7 +86,7 @@ class _SearchPageState extends State<SearchPage> {
             TextField(
               onChanged: (query) => _searchBooks(query),
               decoration: InputDecoration(
-                hintText: 'Search for a book...',
+                hintText: 'Search for a book...'.tr,
                 hintStyle: TextStyle(color: Colors.white70),
                 prefixIcon: Icon(Icons.search, color: Colors.white70),
                 filled: true,
@@ -110,7 +110,7 @@ class _SearchPageState extends State<SearchPage> {
                     Icon(Icons.warning, size: 100, color: Colors.white70),
                     SizedBox(height: 10),
                     Text(
-                      "No results found.",
+                      "No results found.".tr,
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white70,
@@ -216,7 +216,7 @@ class _SearchPageState extends State<SearchPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "No Books yet",
+            "No Books yet".tr,
             style: TextStyle(
               color: Colors.white70,
               fontSize: 16,
@@ -238,7 +238,7 @@ class _SearchPageState extends State<SearchPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Recently Viewed",
+              "Recently Viewed".tr,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -252,7 +252,7 @@ class _SearchPageState extends State<SearchPage> {
                 });
               },
               child: Text(
-                "Clear ",
+                "Clear".tr,
                 style: TextStyle(
                   color: Color(0xFFFEC838),
                   fontWeight: FontWeight.normal,

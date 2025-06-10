@@ -139,8 +139,8 @@ class _UploadFileState extends State<UploadFile> {
                           opacity: 1,
                           child: Transform.rotate(
                             angle: -10.43 * 3.1416 / 180,
-                            child: SvgPicture.asset(
-                              'assets/Icons/Pdf.svg',
+                            child: Image.asset(
+                              'assets/Icons/Pdf.png',
                               width: 30,
                               height: 30,
                             ),
@@ -153,7 +153,7 @@ class _UploadFileState extends State<UploadFile> {
                         child: Opacity(
                           opacity: 1,
                           child: Text(
-                            'Drag and drop to upload',
+                            'drag_and_drop_to_upload'.tr,
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: screenWidth * 0.045,
@@ -194,7 +194,7 @@ class _UploadFileState extends State<UploadFile> {
                                               color: Colors.yellow,
                                             ),
                                             title: Text(
-                                              "Browse documents",
+                                              'browse_documents'.tr,
                                               style: TextStyle(
                                                 fontSize: 18,
                                                 color: Colors.white,
@@ -210,7 +210,7 @@ class _UploadFileState extends State<UploadFile> {
                                               height: 20,
                                             ),
                                             title: Text(
-                                              "Drive",
+                                              'drive'.tr,
                                               style: TextStyle(
                                                 fontSize: 18,
                                                 color: Colors.white,
@@ -225,7 +225,7 @@ class _UploadFileState extends State<UploadFile> {
                               );
                             },
                             child: Text(
-                              'Upload',
+                              'upload'.tr,
                             ),
                           ),
                         ),

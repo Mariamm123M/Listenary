@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:listenary/services/auth_service.dart';
 import 'package:listenary/view/components/custom_textformfield.dart';
+import 'package:listenary/view/pages/login.dart' as login_page;
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../components/bottom_navigation_bar.dart';
@@ -18,7 +19,8 @@ class _SignUpState extends State<SignUp> {
   final formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final TextEditingController nameController = TextEditingController();
 
   final AuthService _authService = AuthService();
@@ -29,12 +31,12 @@ class _SignUpState extends State<SignUp> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Error"),
+        title: Text("error".tr),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text("OK"),
+            child: Text("ok".tr),
           ),
         ],
       ),
@@ -55,7 +57,7 @@ class _SignUpState extends State<SignUp> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.04),
               Center(
                 child: Image.asset(
                   "assets/Icons/logo.png",
@@ -69,7 +71,7 @@ class _SignUpState extends State<SignUp> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Create an Account",
+                      "create_account".tr,
                       style: TextStyle(
                         color: const Color(0XFF212E54),
                         fontSize: screenWidth * 0.055,
@@ -79,7 +81,7 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.01),
                     Text(
-                      "Register to continue",
+                      "register_to_continue".tr,
                       style: TextStyle(
                         color: const Color(0XFF787878),
                         fontSize: screenWidth * 0.04,
@@ -89,13 +91,13 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.035),
 
-                    //username field
+                    // Username field
                     buildTextFormField(
                       screenWidth: screenWidth,
-                      hint: "Username",
+                      hint: "username".tr,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please enter your name";
+                          return "please_enter_name".tr;
                         }
                         return null;
                       },
@@ -104,16 +106,16 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
-
-                    // Email Field
+                    // Email field
                     buildTextFormField(
                       screenWidth: screenWidth,
-                      hint: "Email",
+                      hint: "email".tr,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please enter your email";
-                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                          return "Enter a valid email";
+                          return "please_enter_email".tr;
+                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                            .hasMatch(value)) {
+                          return "enter_valid_email".tr;
                         }
                         return null;
                       },
@@ -126,17 +128,17 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
-                    // Password Field
+                    // Password field
                     buildTextFormField(
                       screenWidth: screenWidth,
-                      hint: "Password",
+                      hint: "password".tr,
                       isObsecure: isObsecure,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please enter password";
+                          return "please_enter_password".tr;
                         }
                         if (value.length < 6) {
-                          return "Password must be at least 6 characters";
+                          return "password_min_length".tr;
                         }
                         return null;
                       },
@@ -157,7 +159,7 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.015),
 
-                    // Sign Up Button
+                    // Sign Up button
                     ElevatedButton(
                       onPressed: () async {
                         if (formKey.currentState!.validate()) {
@@ -171,24 +173,20 @@ class _SignUpState extends State<SignUp> {
                             Get.offAll(() => const BottomNavBarScreen());
                           } on FirebaseAuthException catch (e) {
                             if (e.code == 'email-already-in-use') {
-                              _showErrorDialog(context, "This email is already in use. Please log in.");
+                              _showErrorDialog(
+                                  context, "email_already_in_use".tr);
                             }
                           }
                         }
                       },
-                      child: const Text(
-                        "SIGN UP",
+                      child: Text(
+                        "sign_up".tr,
                         style: TextStyle(fontFamily: 'Inter'),
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.02),
 
-                    Text("or register using", style: TextStyle(
-                        color: const Color(0XFF787878),
-                        fontSize: screenWidth * 0.04,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
-                      ),),
+                    Text("or_register_using".tr),
                     SizedBox(height: screenHeight * 0.01),
 
                     GestureDetector(
@@ -197,7 +195,7 @@ class _SignUpState extends State<SignUp> {
                         if (success) {
                           Get.offAll(() => const BottomNavBarScreen());
                         } else {
-                          _showErrorDialog(context, "Google Sign-In failed. Please try again.");
+                          _showErrorDialog(context, "google_sign_in_failed".tr);
                         }
                       },
                       child: SvgPicture.asset(
@@ -208,12 +206,11 @@ class _SignUpState extends State<SignUp> {
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.01),
-
-                   Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Already have an account?",
+                          'already_have_account'.tr,
                           style: TextStyle(
                             fontSize: screenWidth * 0.032,
                             fontWeight: FontWeight.w500,
@@ -222,21 +219,20 @@ class _SignUpState extends State<SignUp> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Get.toNamed("login");
+                            Get.to(() => login_page.Login());
                           },
                           child: Text(
-                            "Sign In",
+                            'sign_in'.tr,
                             style: TextStyle(
                               fontSize: screenWidth * 0.033,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0XFF212E54),
+                              color: Colors.blue,
                               fontFamily: 'Inter',
                             ),
                           ),
                         ),
                       ],
                     ),
-
                   ],
                 ),
               ),

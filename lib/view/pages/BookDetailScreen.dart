@@ -88,11 +88,11 @@ class BookDetailScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildDetailColumn('Rating', book.rating.toString()),
+                      _buildDetailColumn('rating'.tr, book.rating.toString()),
                       _buildDivider(),
-                      _buildDetailColumn('Pages', book.pages.toString()),
+                      _buildDetailColumn('pages'.tr, book.pages.toString()),
                       _buildDivider(),
-                      _buildDetailColumn('Language', book.language),
+                      _buildDetailColumn('language'.tr, book.language),
                     ],
                   ),
                   SizedBox(height: 8),
@@ -122,7 +122,7 @@ class BookDetailScreen extends StatelessWidget {
                       );
                     },
                     child: Text(
-                      "Play Now",
+                      "play_now".tr,
                       style: TextStyle(
                           color: Color(0xff212E54),
                           fontSize: 20,
@@ -130,17 +130,18 @@ class BookDetailScreen extends StatelessWidget {
                           fontFamily: 'Inter'),
                     )),
                 GestureDetector(
-                    child: SvgPicture.asset("assets/Icons/Headphones.svg",
-                        height: 45, width: 45, fit: BoxFit.fill),
-                    onTap: () {
-                      Get.dialog(
-                        Dialog(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          child: CharctersDialog(book: book),
-                        ),
-                      );
-                    })
+                  child: SvgPicture.asset("assets/Icons/Headphones.svg",
+                      height: 45, width: 45, fit: BoxFit.fill),
+                  onTap: () {
+                    Get.dialog(
+                      Dialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        child: CharctersDialog(book: book),
+                      ),
+                    );
+                  },
+                )
               ],
             ),
             Padding(
@@ -158,7 +159,7 @@ class BookDetailScreen extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Description',
+                  'description'.tr,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 17,

@@ -24,7 +24,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
     // Add a welcome message
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _addBotMessage(
-          "Hello! I'm your book expert assistant. Ask me about any book, and I'll find information for you.");
+          'chat_bot_intro'.tr);
     });
   }
 
@@ -103,14 +103,14 @@ class _ChatBotPageState extends State<ChatBotPage> {
           _loading = false;
         });
         _addBotMessage(
-            "Error: Unable to fetch book information. Please try again later.");
+           "chat_bot_error".tr);
       }
     } catch (e) {
       setState(() {
         _loading = false;
       });
       _addBotMessage(
-          "Error connecting to server. Please check your internet connection and try again.");
+          "chat_bot_internet_error".tr);
     }
   }
 
@@ -133,7 +133,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
             },
           ),
           title: Text(
-            'Book Expert',
+            'chat_bot'.tr,
             style: TextStyle(
                 color: _isDarkMode ? Colors.white : Color(0xFF212E54),
                 fontFamily: 'Inter',
@@ -749,7 +749,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
-                hintText: 'Ask about a book ...',
+                hintText: 'ask_anything'.tr,
                 hintStyle: TextStyle(
                   fontFamily: 'Inter',
                   color: _isDarkMode ? Colors.white70 : Colors.grey[500],
