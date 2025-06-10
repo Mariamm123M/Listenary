@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: /*SplashScreen()*/ Home(),
+      home: SplashScreen(), 
       //initialRoute: "/signup",
       getPages: [
         GetPage(name: "/", page: () => const SplashScreen()),

@@ -1,37 +1,45 @@
-import 'dart:ui';
+import 'package:flutter/material.dart';
 
 class Note {
+  final String userId;           // ✅ Add this line
+  final String bookId;
   final String booktitle;
+  final int sentenceIndex;
   final String noteContent;
   final Color color;
-
-  /// رقم الجملة اللي الملاحظة مرتبطة بيها
-  final int sentenceIndex;
-
-  /// هل الملاحظة دي مثبّتة (مفعّل فيها pin)؟
   final bool isPinned;
 
   Note({
+    required this.userId,       // ✅ Add this line
+    required this.bookId,
     required this.booktitle,
+    required this.sentenceIndex,
     required this.noteContent,
     required this.color,
-    required this.sentenceIndex,
-    this.isPinned = false,
+    required this.isPinned,
   });
 
-  Note copyWith({
-    String? booktitle,
-    String? noteContent,
-    Color? color,
-    int? sentenceIndex,
-    bool? isPinned,
-  }) {
+  factory Note.fromJson(Map<String, dynamic> json) {
     return Note(
-      booktitle: booktitle ?? this.booktitle,
-      noteContent: noteContent ?? this.noteContent,
-      color: color ?? this.color,
-      sentenceIndex: sentenceIndex ?? this.sentenceIndex,
-      isPinned: isPinned ?? this.isPinned,
+      userId: json["userId"] ?? "",                        // ✅ Parse from JSON
+      bookId: json["bookId"],
+      booktitle: json["booktitle"] ?? "",
+      sentenceIndex: json["sentenceIndex"],
+      noteContent: json["noteContent"],
+      color: Color(int.parse(json["color"], radix: 16)),
+      isPinned: json["isPinned"] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "userId": userId,                                     // ✅ Include in toJson
+      "bookId": bookId,
+      "booktitle": booktitle,
+      "sentenceIndex": sentenceIndex,
+      "noteContent": noteContent,
+      "color": color.value.toRadixString(16),
+      "isPinned": isPinned,
+    };
   }
 }
