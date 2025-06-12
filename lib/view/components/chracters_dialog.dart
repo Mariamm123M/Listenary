@@ -7,7 +7,8 @@ import '../pages/ReadingPage.dart';
 import '../pages/charcter_screen.dart';
 
 class CharctersDialog extends StatelessWidget {
-  Book book;
+  final Book book;
+
   CharctersDialog({super.key, required this.book});
 
   @override
@@ -36,7 +37,7 @@ class CharctersDialog extends StatelessWidget {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  "Meet the main characters and get a glimpse of their journey before you dive in! 🚀",
+                  'intro_message'.tr,
                   style: TextStyle(
                     color: Colors.blue,
                     fontSize: 14,
@@ -51,11 +52,9 @@ class CharctersDialog extends StatelessWidget {
                   children: <Widget>[
                     ElevatedButton(
                       onPressed: () {
-                        Get.to(() => ReadingPage(
-                              book: book,
-                            ));
+                        Get.to(() => ReadingPage(book: book));
                       },
-                      child: Text('Skip'),
+                      child: Text('skip'.tr),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey,
                       ),
@@ -68,7 +67,7 @@ class CharctersDialog extends StatelessWidget {
                               storyText: book.bookcontent,
                             ));
                       },
-                      child: Text('Ok'),
+                      child: Text('ok'.tr),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF212E54),
                       ),

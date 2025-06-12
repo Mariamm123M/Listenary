@@ -5,6 +5,7 @@ import 'package:listenary/services/aiService.dart/aiResponse.dart';
 import 'package:listenary/view/components/definition_overlay.dart';
 import 'package:lottie/lottie.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:get/get.dart'; // Added for .tr functionality
 
 import 'package:listenary/view/components/animation.dart';
 import 'package:listenary/services/tts/flutter_tts.dart';
@@ -42,7 +43,6 @@ class _AiAssistantState extends State<AiAssistant>
   String _aiResponse = '';
   String _detectedCommand = '';
 
-  //String selectedLang = "en";
   List<Color> colors = [
     Color(0xff5356FF),
     Color(0xff3572EF),
@@ -74,7 +74,7 @@ class _AiAssistantState extends State<AiAssistant>
     _fttsService.onStartSpeaking = (_) {
       if (mounted) {
         setState(() {
-          _showResponse = true; // Show response when TTS starts
+          _showResponse = true;
         });
       }
     };
@@ -91,11 +91,11 @@ class _AiAssistantState extends State<AiAssistant>
 
   Future<void> sendToAi() async {
     final result =
-        AiResponse.process(_text, widget.bookLang == "en"? "en-US" : "ar-AR"); // استخدم AiResponse مباشرة
+        AiResponse.process(_text, widget.bookLang == "en"? "en-US" : "ar-AR");
     if (result.isCommand) {
-      _detectedCommand = result.command ?? "No command detected";
-      _aiResponse = result.predefinedResponse ?? "No response generated";
-      _showResponse = true; // إظهار الرد فورًا بعد جلبه
+      _detectedCommand = result.command ?? 'no_command_detected'.tr;
+      _aiResponse = result.predefinedResponse ?? 'no_response_generated'.tr;
+      _showResponse = true;
       await Future.delayed(Duration(seconds: 1));
 
       print("Command: ${result.command}");
@@ -157,7 +157,6 @@ class _AiAssistantState extends State<AiAssistant>
             _showCommand = false;
           });
 
-          // Auto stop after 5 seconds if no speech detected
           Timer(Duration(seconds: 5), () {
             if (_text.isEmpty && mounted) {
               _speech.stop();
@@ -180,11 +179,11 @@ class _AiAssistantState extends State<AiAssistant>
                   if (words.length == 1 &&
                       (words[0].toLowerCase() == "translate" ||
                           words[0].toLowerCase() == "ترجم")) {
-                    sendToAi(); // تنفيذ الأمر مباشرة
+                    sendToAi();
                   } else if (words.length == 1 &&
                       (words[0].toLowerCase() == "summarize" ||
                           words[0].toLowerCase() == "لخص")) {
-                    sendToAi(); // تنفيذ الأمر مباشرة
+                    sendToAi();
                   } else if (words.length == 1 &&
                       (words[0].toLowerCase() == "define" ||
                           words[0].toLowerCase() == "عرف" ||
@@ -201,18 +200,16 @@ class _AiAssistantState extends State<AiAssistant>
                     Future.delayed(Duration(seconds: 5), () {
                       setState(() {
                         _aiResponse = "";
-                        // Clear message after a while
                         isRecording = false;
                         _isListening = false;
                       });
                     });
                   } else if (words.length <= 3) {
-                    sendToAi(); // ✅ Execute once, only when result is final
+                    sendToAi();
                   } else {
-                    // Display message when more than 2 words are detected
                     setState(() async {
                       _aiResponse = widget.bookLang == "en"
-                          ? "Please speak only 2 words or fewer, not ${words.length} words."
+                          ? 'please_speak_fewer_words'.tr
                           : "  كلمات .${words.length} أرجوك تحدث كلمتين أو أقل وليس ";
                       await _fttsService.setLanguage(widget.bookLang);
                       _fttsService.speak(_aiResponse);
@@ -221,7 +218,6 @@ class _AiAssistantState extends State<AiAssistant>
                     Future.delayed(Duration(seconds: 5), () {
                       setState(() {
                         _aiResponse = "";
-                        // Clear message after a while
                         isRecording = false;
                         _isListening = false;
                       });
@@ -235,7 +231,7 @@ class _AiAssistantState extends State<AiAssistant>
         } else {
           setState(() {
             _aiResponse = widget.bookLang == "en"
-                ? "Speech recognition not available now."
+                ? 'speech_recognition_not_available'.tr
                 : ".التعرف الصوتي غير متاح حاليا ";
             isRecording = false;
             _isListening = false;
@@ -243,7 +239,6 @@ class _AiAssistantState extends State<AiAssistant>
           });
         }
       } else {
-        // If already recording, stop it
         setState(() {
           isRecording = false;
           _isListening = false;
@@ -274,7 +269,7 @@ class _AiAssistantState extends State<AiAssistant>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "How can I help you?",
+            'how_can_i_help'.tr,
             style: TextStyle(
                 fontSize: widget.screenWidth * 0.053,
                 fontWeight: FontWeight.bold,
@@ -330,7 +325,7 @@ class _AiAssistantState extends State<AiAssistant>
                       padding: EdgeInsets.symmetric(
                           horizontal: widget.screenWidth * 0.04),
                       child: Text(
-                        _text.isEmpty ? "Listening..." : _text,
+                        _text.isEmpty ? 'listening'.tr : _text,
                         style: TextStyle(
                             fontSize: widget.screenWidth * 0.04,
                             color: Colors.white),
@@ -343,7 +338,7 @@ class _AiAssistantState extends State<AiAssistant>
                         padding: EdgeInsets.symmetric(
                             horizontal: widget.screenWidth * 0.04),
                         child: Text(
-                          "Command: $_detectedCommand",
+                          "${'command'.tr}: $_detectedCommand",
                           style: TextStyle(
                               fontSize: widget.screenWidth * 0.04,
                               color: Colors.greenAccent),
@@ -385,7 +380,7 @@ class _AiAssistantState extends State<AiAssistant>
                           ),
                           SizedBox(width: widget.screenWidth * 0.01),
                           Text(
-                            "Start Listening",
+                            'start_listening'.tr,
                             style: TextStyle(
                                 color: Color(0xFF212E54),
                                 fontSize: widget.screenWidth * 0.04),
@@ -395,7 +390,7 @@ class _AiAssistantState extends State<AiAssistant>
                     ),
                     SizedBox(height: widget.screenHeight * 0.06),
                     Text(
-                      "I'm in development, learning new skills every day!",
+                      'in_development'.tr,
                       style: TextStyle(
                           color: Colors.black38,
                           fontSize: widget.screenWidth * 0.04),

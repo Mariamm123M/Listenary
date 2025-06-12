@@ -204,7 +204,7 @@ class _LoginState extends State<Login> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                     'dont_have_account'.tr,
+                      'dont_have_account'.tr,
                           style: TextStyle(
                             fontSize: screenWidth * 0.032,
                             fontWeight: FontWeight.w500,

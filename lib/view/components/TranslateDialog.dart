@@ -5,12 +5,19 @@ import 'package:translator/translator.dart';
 class TranslateDialog extends StatefulWidget {
   final bool isDarkMode;
   final String? initial;
-  String? fromLanguage = 'English';
-  String? toLanguage = 'Arabic';
+  String? fromLanguage = 'english'.tr;
+  String? toLanguage = 'arabic'.tr;
 
-
-  TranslateDialog({Key? key, required this.isDarkMode, this.initial, this.fromLanguage = 'English', 
-  this.toLanguage = 'Arabic'}) : super(key: key);
+  TranslateDialog({
+    Key? key, 
+    required this.isDarkMode, 
+    this.initial, 
+    this.fromLanguage,
+    this.toLanguage,
+  }) : super(key: key) {
+    fromLanguage ??= 'english'.tr;
+    toLanguage ??= 'arabic'.tr;
+  }
 
   @override
   _TranslateDialogState createState() => _TranslateDialogState();
@@ -22,24 +29,23 @@ class _TranslateDialogState extends State<TranslateDialog> {
   final GoogleTranslator _translator = GoogleTranslator();
 
   final Map<String, String> _languages = {
-    'English': 'en',
-    'Arabic': 'ar',
-    'French': 'fr',
-    'Spanish': 'es',
-    'German': 'de',
-    'Italian': 'it',
-    'Russian': 'ru',
-    'Chinese': 'zh',
-    'Japanese': 'ja',
-    'Hindi': 'hi',
+    'english': 'en',
+    'arabic': 'ar',
+    'french': 'fr',
+    'spanish': 'es',
+    'german': 'de',
+    'italian': 'it',
+    'russian': 'ru',
+    'chinese': 'zh',
+    'japanese': 'ja',
+    'hindi': 'hi',
   };
 
- 
   Future<void> _translateText() async {
     if (_textController.text.isNotEmpty) {
       try {
-        final fromLang = _languages[widget.fromLanguage]!;
-        final toLang = _languages[widget.toLanguage]!;
+        final fromLang = _languages[widget.fromLanguage!.toLowerCase()]!;
+        final toLang = _languages[widget.toLanguage!.toLowerCase()]!;
 
         final translation = await _translator.translate(
           _textController.text,
@@ -55,28 +61,31 @@ class _TranslateDialogState extends State<TranslateDialog> {
       }
     }
   }
-@override
-void initState() {
-  super.initState();
-  if (widget.initial != null && widget.initial!.isNotEmpty) {
-    _textController.text = widget.initial!;
-    _translateText();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initial != null && widget.initial!.isNotEmpty) {
+      _textController.text = widget.initial!;
+      _translateText();
+    }
   }
-}
-@override
-void dispose() {
-  _textController.dispose();
-  super.dispose();
-}
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: widget.isDarkMode ? Color(0xFF212E54) : Colors.white,
       title: Text(
-        'Translate',
+        'translate'.tr,
         style: TextStyle(
-          color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),fontFamily: 'Inter'
+          color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
+          fontFamily: 'Inter'
         ),
       ),
       content: SingleChildScrollView(
@@ -87,59 +96,57 @@ void dispose() {
             Row(
               children: [
                 Expanded(
-                    child: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Text(
-      'From Language',
-      style: TextStyle(
-        color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),fontFamily: 'Inter'
-      ),
-    ),
-    Theme(
-      data: Theme.of(context).copyWith(
-        canvasColor: Colors.white, // Background color for dropdown items
-      ),
-      child: DropdownButton<String>(
-        value: widget.fromLanguage,
-        onChanged: (String? newValue) {
-          setState(() {
-            widget.fromLanguage = newValue;
-          });
-          _translateText();
-        },
-        style: TextStyle(
-          color: widget.isDarkMode ? Colors.white : Color(0xFF212E54), fontFamily: 'Inter'// Selected item color
-        ),
-        dropdownColor: widget.isDarkMode ? Color(0xFF212E54) : Colors.white, // Dropdown items background color
-        iconEnabledColor: widget.isDarkMode ? Colors.white : Color(0xFF212E54), // Dropdown icon color
-        items: _languages.keys.map<DropdownMenuItem<String>>(
-          (String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(
-                value,
-              ),
-            );
-          },
-        ).toList(),
-      ),
-    ),
-  ],
-)
-
-),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'from_language'.tr,
+                        style: TextStyle(
+                          color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
+                          fontFamily: 'Inter'
+                        ),
+                      ),
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                          canvasColor: Colors.white,
+                        ),
+                        child: DropdownButton<String>(
+                          value: widget.fromLanguage,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              widget.fromLanguage = newValue;
+                            });
+                            _translateText();
+                          },
+                          style: TextStyle(
+                            color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
+                            fontFamily: 'Inter'
+                          ),
+                          dropdownColor: widget.isDarkMode ? Color(0xFF212E54) : Colors.white,
+                          iconEnabledColor: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
+                          items: _languages.keys.map<DropdownMenuItem<String>>(
+                            (String key) {
+                              return DropdownMenuItem<String>(
+                                value: key.tr,
+                                child: Text(key.tr),
+                              );
+                            },
+                          ).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 SizedBox(width: 20),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'To Language',
+                        'to_language'.tr,
                         style: TextStyle(
-                          color: widget.isDarkMode
-                              ? Colors.white
-                              : Color(0xFF212E54),
+                          color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
+                          fontFamily: 'Inter'
                         ),
                       ),
                       DropdownButton<String>(
@@ -151,17 +158,16 @@ void dispose() {
                           _translateText();
                         },
                         style: TextStyle(
-                          color:
-                              widget.isDarkMode ? Colors.white : Color(0xFF212E54), fontFamily: 'Inter'
+                          color: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
+                          fontFamily: 'Inter'
                         ),
                         dropdownColor: widget.isDarkMode ? Color(0xFF212E54) : Colors.white,
-                                iconEnabledColor: widget.isDarkMode ? Colors.white : Color(0xFF212E54), // Dropdown icon color
-
+                        iconEnabledColor: widget.isDarkMode ? Colors.white : Color(0xFF212E54),
                         items: _languages.keys.map<DropdownMenuItem<String>>(
-                          (String value) {
+                          (String key) {
                             return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
+                              value: key.tr,
+                              child: Text(key.tr),
                             );
                           },
                         ).toList(),
@@ -176,9 +182,10 @@ void dispose() {
               controller: _textController,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Enter text to translate...',
+                hintText: 'enter_text_to_translate'.tr,
                 hintStyle: TextStyle(
-                  color: widget.isDarkMode ? Colors.white70 : Colors.black54,fontFamily: 'Inter'
+                  color: widget.isDarkMode ? Colors.white70 : Colors.black54,
+                  fontFamily: 'Inter'
                 ),
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
@@ -200,7 +207,7 @@ void dispose() {
               maxLines: 5,
               readOnly: true,
               decoration: InputDecoration(
-                hintText: 'Translated text will appear here...',
+                hintText: 'translated_text_will_appear_here'.tr,
                 hintStyle: TextStyle(
                   color: widget.isDarkMode ? Colors.white70 : Colors.black54,
                 ),

@@ -267,7 +267,7 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.settings,
-              text: "Settings".tr,
+              text: "settings".tr,
               onTap: () {
                 Get.toNamed("settings");
               },
@@ -277,7 +277,7 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.help,
-              text: "Help Center".tr,
+              text: "help_center".tr,
               onTap: () {
                 Get.toNamed("help");
               },
@@ -287,7 +287,7 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.share_outlined,
-              text: "Share app".tr,
+              text: "share_app".tr,
               onTap: () {
                 Share.share('Download my app here: $downloadLink'.tr);
               },
@@ -297,7 +297,7 @@ class _ProfileState extends State<Profile> {
               screenHeight: screenHeight,
               screenWidth: screenWidth,
               icon: Icons.logout_sharp,
-              text: "Log out".tr,
+              text: "log_out".tr,
               onTap: () {
                 // Show confirmation dialog
                 showDialog(
@@ -305,14 +305,14 @@ class _ProfileState extends State<Profile> {
                   builder: (BuildContext context) {
                     return AlertDialog(
                       title: Text(
-                        "Logging Out".tr,
+                        "logging_out".tr,
                         style: const TextStyle(
                           color: Color(0xff212E54),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       content: Text(
-                        "Are you sure you want to Log Out from Listenary?".tr,
+                        "log_out_confirm".tr,
                         style: const TextStyle(color: Color(0xff212E54)),
                       ),
                       backgroundColor: Colors.white,
@@ -325,7 +325,7 @@ class _ProfileState extends State<Profile> {
                             Get.back(); // Close dialog
                           },
                           child: Text(
-                            "Cancel".tr,
+                            "cancel".tr,
                             style: const TextStyle(color: Colors.grey),
                           ),
                         ),
@@ -341,7 +341,7 @@ class _ProfileState extends State<Profile> {
                             ),
                           ),
                           child: Text(
-                            "Log Out".tr,
+                            "log_out".tr,
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
@@ -391,7 +391,7 @@ class _ProfileState extends State<Profile> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "Choose option to change profile photo".tr,
+            "choose_option_change_photo".tr,
             style: TextStyle(
                 color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
           ),
@@ -400,7 +400,7 @@ class _ProfileState extends State<Profile> {
             children: [
               Expanded(
                 child: ListTile(
-                  title: Text("Camera".tr,
+                  title: Text("camera".tr,
                       style: TextStyle(color: Colors.white, fontSize: 14)),
                   leading: const Icon(Icons.camera, color: Colors.white, size: 30),
                   onTap: () async {
@@ -411,7 +411,7 @@ class _ProfileState extends State<Profile> {
               ),
               Expanded(
                 child: ListTile(
-                  title: Text("Gallery".tr,
+                  title: Text("gallery".tr,
                       style: TextStyle(color: Colors.white, fontSize: 14)),
                   leading: SvgPicture.asset("assets/Icons/gallery.svg",
                       color: Colors.white, height: 30, width: 30),
@@ -426,7 +426,7 @@ class _ProfileState extends State<Profile> {
           const SizedBox(height: 10),
           Expanded(
             child: ListTile(
-              title: Text("Delete Profile Image".tr,
+              title: Text("delete_profile_image".tr,
                   style: TextStyle(color: Colors.white, fontSize: 14)),
               leading: Icon(Icons.delete, color: Colors.white, size: 30),
               onTap: () async {

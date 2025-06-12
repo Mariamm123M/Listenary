@@ -146,7 +146,7 @@ impending invasion, forging an unbreakable bond in the process.
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Main Characters'.tr),
+        title: Text('main_Characters'.tr),
         backgroundColor: Color(0xFFFEC838),
       ),
       body: Container(
@@ -167,7 +167,7 @@ impending invasion, forging an unbreakable bond in the process.
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _fetchCharacters,
-              child: Text('Retry'.tr),
+              child: Text('retry'.tr),
             )
           ],
         )
@@ -206,7 +206,7 @@ impending invasion, forging an unbreakable bond in the process.
                               SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  character['name'] ?? 'Unknown'.tr,
+                                  character['name'] ?? 'unknown'.tr,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -226,7 +226,7 @@ impending invasion, forging an unbreakable bond in the process.
                           ),
                           SizedBox(height: 8),
                           Text(
-                            '${'Role'.tr}: ${role.toUpperCase()}',
+                            '${'role'.tr}: ${role.toUpperCase()}',
                             style: TextStyle(
                               fontStyle: FontStyle.italic,
                               color: _getRoleColor(role),
@@ -235,7 +235,7 @@ impending invasion, forging an unbreakable bond in the process.
                           SizedBox(height: 12),
                           Text(
                             character['summary'] ??
-                                'No summary available'.tr,
+                                'no_summary_available'.tr,
                             style: TextStyle(fontSize: 14),
                           ),
                         ],
@@ -249,9 +249,9 @@ impending invasion, forging an unbreakable bond in the process.
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                 Get.back();
                 },
-                child: Text('GO to book'.tr),
+                child: Text('go_to_book'.tr),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF212E54),
                   padding: EdgeInsets.symmetric(

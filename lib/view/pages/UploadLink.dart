@@ -10,7 +10,6 @@ class UploadLink extends StatelessWidget {
   final textKey = GlobalKey<FormState>();
   final TextEditingController textController = TextEditingController();
 
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -37,7 +36,7 @@ class UploadLink extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Input or paste Link to extract text",
+                    "input_or_paste_link_to_extract_text".tr,
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: screenWidth * 0.05,
@@ -50,14 +49,13 @@ class UploadLink extends StatelessWidget {
                     controller: textController,
                     maxLines: 10,
                     decoration: InputDecoration(
-                      hintText: "Enter Link",
+                      hintText: "enter_link".tr,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide(width: 1, color: Color(0xff949494)),
-                      ),
                     ),
-                  ),
+                  ),),
                   SizedBox(height: 10),
                   Row(
                     children: [
@@ -95,13 +93,12 @@ class UploadLink extends StatelessWidget {
 
                               Get.to(() => ReadingPage(documnetText: extractedText));
                             } else {
-
                               final error = jsonDecode(response.body)['error'];
                               Get.snackbar("Error", error);
                             }
                           }
                         },
-                        child: Text("Upload Link"),
+                        child: Text("upload_link".tr),
                       ),
                     ],
                   ),
@@ -113,24 +110,25 @@ class UploadLink extends StatelessWidget {
     );
   }
 }
-Future<void> copyLink(
-    TextEditingController text, BuildContext context) async {
+
+Future<void> copyLink(TextEditingController text, BuildContext context) async {
   if (text.text.isNotEmpty) {
     await FlutterClipboard.copy(text.text);
     Get.snackbar(
       "",
-      "Link copied to clipboard",
+      "link_copied_to_clipboard".tr,
       backgroundColor: Color(0xff212E54),
       messageText: Text(
-        "Link copied to clipboard",
+        "link_copied_to_clipboard".tr,
         style: TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Inter'),
       ),
     );
   }
 }
+
 String? validateLink(String? value) {
   if (value == null || value.isEmpty) {
-    return 'Please enter a link';
+    return 'please_enter_link'.tr;
   }
 
   // Regular expression for URL validation
@@ -142,12 +140,12 @@ String? validateLink(String? value) {
   );
 
   if (!urlRegex.hasMatch(value)) {
-    return 'Please enter a valid URL (e.g. https://example.com)';
+    return 'please_enter_valid_url'.tr;
   }
 
   // Additional check for at least one dot in the domain
   if (!value.contains('.') || value.split('.').last.length < 2) {
-    return 'Invalid domain format';
+    return 'please_enter_valid_url'.tr;
   }
 
   return null; // Return null if valid

@@ -186,7 +186,12 @@ class _SignUpState extends State<SignUp> {
                     ),
                     SizedBox(height: screenHeight * 0.02),
 
-                    Text("or_register_using".tr),
+                    Text("or_register_using".tr,  style: TextStyle(
+                        color: const Color(0XFF787878),
+                        fontSize: screenWidth * 0.04,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),),
                     SizedBox(height: screenHeight * 0.01),
 
                     GestureDetector(
