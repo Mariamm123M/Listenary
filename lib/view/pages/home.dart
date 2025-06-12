@@ -68,7 +68,7 @@ Book book = Book(
 
   List<String> categories = [
     "drama".tr,
-    "romantic".tr,
+    "romance".tr,
     "science_fiction".tr,
     "children".tr,
     "comedy".tr,
