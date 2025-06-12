@@ -7,6 +7,7 @@ import 'package:listenary/view/pages/login.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  
 
   // Sign in with Email & Password
   Future<void> signInWithEmail(String email, String password, BuildContext context) async {

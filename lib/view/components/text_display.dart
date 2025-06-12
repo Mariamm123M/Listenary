@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,22 +11,27 @@ import 'package:listenary/model/book_model.dart';
 import 'package:listenary/model/noteModel.dart';
 import 'package:listenary/view/components/definition_overlay.dart';
 import 'package:listenary/view/components/executions.dart';
+import 'package:listenary/view/components/myNotes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class TextDisplay extends StatefulWidget {
-  bool isDarkMode;
+  final bool isDarkMode;
   final int currentSentenceIndex;
   final List<String> sentences;
-  String selectedFontFamily = 'Inter';
-  FontWeight selectedFontWeight = FontWeight.w700;
-  TextDecoration selectedFontDecoration = TextDecoration.none;
-  FontStyle selectedFontStyle = FontStyle.normal;
+  final String selectedFontFamily;
+  final FontWeight selectedFontWeight;
+  final TextDecoration selectedFontDecoration;
+  final FontStyle selectedFontStyle;
   final double screenWidth;
   final double screenHeight;
   final ScrollController scrollController;
   final double scaleFactor;
   final String? highlightedWord;
   final Book? book;
-  TextDisplay({
+
+  const TextDisplay({
     super.key,
     this.book,
     required this.isDarkMode,
@@ -48,84 +53,517 @@ class TextDisplay extends StatefulWidget {
 }
 
 class _TextDisplayState extends State<TextDisplay> {
-  //String selectedLang = "en";
-
+  User? user;
   String cleanedWord = "";
-
   List<String> definitions = [];
-
   bool isLoading = false;
-  final Map<int, Note> notesMap = {}; // <sentenceIndex, Note> //temporary
-
-  final DefinitionOverlayController overlayController =
-      DefinitionOverlayController();
-
+  final Map<int, Note> notesMap = {};
+  final DefinitionOverlayController overlayController = DefinitionOverlayController();
   final highlightController = Get.find<HighlightController>();
   final mynoteController = Get.find<NoteController>();
   final searchController = Get.find<my_search.MySearchController>();
-  Color selectedColor = Colors.blue; // اللون اللي يختاره المستخدم
-  @override
-  late final StreamSubscription _notesSubscription;
+  Color selectedColor = Colors.blue;
+  
+  // Fixed variable declarations
+  StreamSubscription? _notesSubscription;
+  StreamSubscription? _bookNotesSubscription;
+  StreamSubscription? _authStateSubscription;
+  bool _isLoadingNotes = false;
 
   @override
   void initState() {
     super.initState();
-    _loadNotes();
+    _initializeAuth();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    print('📱 Post frame callback executed');
+    _debugFullAuthState(); // Add this debug call
+    _initializeAuth();
+    getCurrentUserId() ;
+  });
+  }
+
+void getCurrentUserId() {
+  User? user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    String uid = user.uid;
+    print("User ID: $uid");
+  } else {
+    print("No user is currently signed in.");
+  }
+}
+  // Replace your _initializeAuth with this version:
+void _initializeAuth() {
+  print('🔐 Starting _initializeAuth');
+  
+  // Check immediately first
+  User? immediateUser = FirebaseAuth.instance.currentUser;
+  print('Immediate user check: ${immediateUser?.email ?? 'NULL'}');
+  
+  if (immediateUser != null) {
+    print('✅ User found immediately, setting up...');
+    if (mounted) {
+      setState(() {
+        user = immediateUser;
+      });
+      _initializeAfterAuth();
+    }
+    return; // Exit early if user is found
+  }
+  
+  // Set up auth state listener
+  print('👂 Setting up auth state listener...');
+  _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((User? currentUser) {
+    print('🔄 Auth state changed to: ${currentUser?.email ?? 'No user'}');
+    print('🆔 User UID: ${currentUser?.uid ?? 'No UID'}');
+    
+    if (mounted) {
+      setState(() {
+        user = currentUser;
+      });
+      
+      if (currentUser != null) {
+        print('✅ User authenticated, initializing...');
+        _initializeAfterAuth();
+      } else {
+        print('❌ User not authenticated');
+        _handleUnauthenticatedUser();
+      }
+    }
+  });
+  
+  // Also try with a delay in case Firebase needs time
+  Timer(Duration(milliseconds: 500), () {
+    User? delayedUser = FirebaseAuth.instance.currentUser;
+    print('🕐 Delayed user check: ${delayedUser?.email ?? 'NULL'}');
+    
+    if (delayedUser != null && user == null && mounted) {
+      print('🎯 Found user after delay!');
+      setState(() {
+        user = delayedUser;
+      });
+      _initializeAfterAuth();
+    }
+  });
+}
+
+// Add this method to manually trigger auth check (for testing)
+void manualAuthCheck() {
+  print('🔧 Manual auth check triggered');
+  _debugFullAuthState();
+  
+  // Force check current user
+  User? manualUser = FirebaseAuth.instance.currentUser;
+  if (manualUser != null && mounted) {
+    print('🎯 Manual check found user: ${manualUser.email}');
+    setState(() {
+      user = manualUser;
+    });
+    _initializeAfterAuth();
+  } else {
+    print('❌ Manual check found no user');
+  }
+}
+void _debugFullAuthState() async {
+  print('🔍 === FULL AUTHENTICATION DEBUG ===');
+  
+  // 1. Check Firebase Auth instance
+  print('Firebase Auth instance: ${FirebaseAuth.instance}');
+  print('Firebase App: ${FirebaseAuth.instance.app}');
+  
+  // 2. Check current user immediately
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  print('Current user (immediate): ${currentUser?.email ?? 'NULL'}');
+  print('Current user UID (immediate): ${currentUser?.uid ?? 'NULL'}');
+  
+  // 3. Wait and check again
+  await Future.delayed(Duration(seconds: 1));
+  currentUser = FirebaseAuth.instance.currentUser;
+  print('Current user (after 1s delay): ${currentUser?.email ?? 'NULL'}');
+  print('Current user UID (after 1s delay): ${currentUser?.uid ?? 'NULL'}');
+  
+  // 4. Check auth state stream
+  print('Setting up auth state listener...');
+  FirebaseAuth.instance.authStateChanges().take(1).listen((User? user) {
+    print('Auth state stream result: ${user?.email ?? 'NULL'}');
+    print('Auth state stream UID: ${user?.uid ?? 'NULL'}');
+  });
+  
+  // 5. Check user state stream
+  FirebaseAuth.instance.userChanges().take(1).listen((User? user) {
+    print('User changes stream result: ${user?.email ?? 'NULL'}');
+    print('User changes stream UID: ${user?.uid ?? 'NULL'}');
+  });
+  
+  // 6. Check if user is signed in differently
+  print('Checking all possible auth states...');
+  
+  // 7. Try to reload user
+  if (currentUser != null) {
+    try {
+      await currentUser.reload();
+      User? reloadedUser = FirebaseAuth.instance.currentUser;
+      print('After reload - User: ${reloadedUser?.email ?? 'NULL'}');
+      print('After reload - UID: ${reloadedUser?.uid ?? 'NULL'}');
+    } catch (e) {
+      print('Reload failed: $e');
+    }
+  }
+  
+  print('=== END DEBUG ===');
+}
+  void _initializeAfterAuth() {
+    print('Initializing after authentication...');
+    print('Current user: ${user?.email}');
+    print('User UID: ${user?.uid}');
+    
+    // Initialize search
     searchController.initializeSearch(widget.sentences);
     searchController.attachToScrollController(widget.scrollController);
 
-    // استماع لتغييرات temporaryNotes
+    // Load notes after initialization
+    _initializeNotes();
+
+    // Set up listeners
     _notesSubscription = mynoteController.temporaryNotes.listen((_) {
-      setState(() => _loadNotes());
+      if (mounted) {
+        _loadNotes();
+      }
     });
 
-    // إذا كان هناك كتاب، نستمع لتغييراته أيضًا
     if (widget.book != null) {
-      ever(widget.book!.notes, (_) {
-        setState(() => _loadNotes());
+      _bookNotesSubscription = widget.book!.notes.listen((_) {
+        if (mounted) {
+          _loadNotes();
+        }
       });
     }
-  } //book
-  //uploaded
+  }
+
+  void _handleUnauthenticatedUser() {
+    // You can customize this based on your app's flow
+    print('User is not authenticated - consider redirecting to login');
+    
+    // Option 1: Show a snackbar
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to access notes'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    
+    // Option 2: Redirect to login (uncomment if needed)
+    // Get.offNamed('/login');
+    
+    // Option 3: Just initialize without user-dependent features
+    searchController.initializeSearch(widget.sentences);
+    searchController.attachToScrollController(widget.scrollController);
+    _loadNotes(); // This will only load temporary notes
+  }
+
+  Future<void> _initializeNotes() async {
+    if (user != null && widget.book != null) {
+      await fetchNotesForBook();
+    }
+    _loadNotes();
+  }
+
+  Future<void> fetchNotesForBook() async {
+    print('Starting fetchNotesForBook...');
+    
+    // Check prerequisites
+    if (user == null) {
+      print('Error: User is null, cannot fetch notes');
+      return;
+    }
+    print('User ID: ${user!.uid}');
+    
+    if (widget.book == null) {
+      print('Error: Book is null, cannot fetch notes');
+      return;
+    }
+    print('Book ID: ${widget.book!.bookId}');
+    print('Book Title: ${widget.book!.booktitle}');
+    
+    if (_isLoadingNotes) {
+      print('Warning: Already loading notes, skipping...');
+      return;
+    }
+
+    setState(() {
+      _isLoadingNotes = true;
+    });
+
+    try {
+      // Construct and log the URL
+      final url = 'http://192.168.1.15:5001/api/notes?userId=${user!.uid}&bookId=${widget.book!.bookId}';
+      print('Making request to: $url');
+      
+      final stopwatch = Stopwatch()..start();
+      
+      final response = await http.get(
+        Uri.parse(url),
+      ).timeout(const Duration(seconds: 10));
+      
+      stopwatch.stop();
+      print('Request completed in ${stopwatch.elapsedMilliseconds}ms');
+      print('Response status code: ${response.statusCode}');
+      print('Response headers: ${response.headers}');
+      
+      if (response.statusCode == 200) {
+        print('Successful response received');
+        print('Raw response body: ${response.body}');
+        print('Response body length: ${response.body.length} characters');
+        
+        try {
+          final List data = json.decode(response.body);
+          print('JSON decoded successfully');
+          print('Number of items in response: ${data.length}');
+          
+          // Log each item in the response
+          for (int i = 0; i < data.length; i++) {
+            print('Item $i: ${data[i]}');
+          }
+          
+          final notes = data.map((e) {
+            try {
+              final note = Note.fromJson(e);
+              print('Successfully parsed note: ${note.noteContent} at sentence ${note.sentenceIndex}');
+              return note;
+            } catch (parseError) {
+              print('Error parsing note item: $e');
+              print('Parse error: $parseError');
+              rethrow;
+            }
+          }).toList();
+          
+          print('Successfully parsed ${notes.length} notes from server');
+          
+          // Log details of each parsed note
+          for (int i = 0; i < notes.length; i++) {
+            final note = notes[i];
+            print('Note $i:');
+            print('  Content: "${note.noteContent}"');
+            print('  Sentence Index: ${note.sentenceIndex}');
+            print('  Color: ${note.color}');
+            print('  Book ID: ${note.bookId}');
+            print('  User ID: ${note.userId}');
+            print('  Is Pinned: ${note.isPinned}');
+          }
+          
+          if (mounted) {
+            print('Widget is mounted, updating book notes...');
+            
+            // Log current state before update
+            print('Current book.notes count: ${widget.book!.notes.length}');
+            
+            // Update book notes
+            widget.book!.notes.assignAll(notes);
+            
+            print('Book notes updated successfully');
+            print('New book.notes count: ${widget.book!.notes.length}');
+            
+            setState(() {
+              _loadNotes(); // Load notes into the map after fetching
+              _isLoadingNotes = false;
+            });
+            
+            print('State updated and _loadNotes() called');
+          } else {
+            print('Warning: Widget not mounted, skipping state update');
+          }
+        } catch (jsonError) {
+          print('JSON decode error: $jsonError');
+          print('Response body that failed to decode: ${response.body}');
+          rethrow;
+        }
+      } else {
+        print('HTTP Error - Status Code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to load notes: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception in fetchNotesForBook: $e');
+      print('Exception type: ${e.runtimeType}');
+      
+      if (e is TimeoutException) {
+        print('Request timed out after 10 seconds');
+      } else if (e is SocketException) {
+        print('Network connection error');
+      } else if (e is FormatException) {
+        print('JSON format error');
+      }
+      
+      if (mounted) {
+        setState(() {
+          _isLoadingNotes = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load notes: ${e.toString()}')),
+        );
+      }
+    }
+    
+    print('fetchNotesForBook completed');
+  }
+
+  Future<void> saveNoteToServer(Note note, String userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.15:5001/api/notes'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "userId": userId,
+          "bookId": note.bookId,
+          "booktitle": note.booktitle,
+          "sentenceIndex": note.sentenceIndex,
+          "noteContent": note.noteContent,
+          "color": note.color.value.toRadixString(16),
+          "isPinned": note.isPinned,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception("Server returned ${response.statusCode}");
+      }
+      
+      debugPrint("Note saved successfully to server");
+    } catch (e) {
+      debugPrint("Error saving note: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save note: ${e.toString()}')),
+        );
+      }
+      rethrow;
+    }
+  }
+
 
   @override
   void dispose() {
-    _notesSubscription.cancel(); // تنظيف الـ listener
+    _notesSubscription?.cancel();
+    _bookNotesSubscription?.cancel();
+    _authStateSubscription?.cancel();
     super.dispose();
   }
 
   void _loadNotes() {
+    debugPrint('Loading notes into map...');
+    
+    // Clear existing notes
     notesMap.clear();
 
-    // Load notes from the book
+    // Load book notes if available
     if (widget.book != null) {
-      for (var note in widget.book!.notes) {
+      debugPrint('Loading ${widget.book!.notes.length} book notes');
+      for (final note in widget.book!.notes) {
         notesMap[note.sentenceIndex] = note;
+        debugPrint('Loaded book note at sentence ${note.sentenceIndex}: ${note.noteContent}');
       }
     }
 
-    // Load temporary notes
-    for (var note in mynoteController.temporaryNotes) {
+    // Load temporary notes (these override book notes if same sentence)
+    debugPrint('Loading ${mynoteController.temporaryNotes.length} temporary notes');
+    for (final note in mynoteController.temporaryNotes) {
       notesMap[note.sentenceIndex] = note;
+      debugPrint('Loaded temp note at sentence ${note.sentenceIndex}: ${note.noteContent}');
+    }
+    
+    debugPrint('Total notes in map: ${notesMap.length}');
+    
+    // Force rebuild to show notes
+    if (mounted) {
+      setState(() {});
     }
   }
 
-  void _saveNote(Note note) {
-    setState(() {
-      if (widget.book != null) {
-        widget.book!.notes
-            .removeWhere((n) => n.sentenceIndex == note.sentenceIndex);
-        widget.book!.notes.add(note); // سيعمل لأن notes أصبحت RxList
+  Future<void> _saveNote(Note note) async {
+    if (note.noteContent.isEmpty) return;
+
+    debugPrint('Saving note: ${note.noteContent} at sentence ${note.sentenceIndex}');
+
+    try {
+      if (user != null && widget.book != null) {
+        // Save to server first
+        await saveNoteToServer(note, user!.uid);
+        
+        if (mounted) {
+          // Update book notes
+          widget.book!.notes.removeWhere((n) => n.sentenceIndex == note.sentenceIndex);
+          widget.book!.notes.add(note);
+          
+          // Update local map and UI
+          setState(() {
+            notesMap[note.sentenceIndex] = note;
+          });
+          
+          debugPrint('Note saved to book and updated in UI');
+        }
       } else {
+        // Save as temporary note
         mynoteController.saveNote(note);
+        if (mounted) {
+          setState(() {
+            notesMap[note.sentenceIndex] = note;
+          });
+        }
+        debugPrint('Note saved as temporary note');
       }
-      notesMap[note.sentenceIndex] = note; //temporary
-    });
+    } catch (e) {
+      debugPrint('Error saving note: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save note: ${e.toString()}')),
+        );
+      }
+    }
   }
 
-  // These methods should be inside your widget class
+  Future<void> _deleteNote(int sentenceIndex) async {
+  debugPrint('Deleting note at sentence $sentenceIndex');
 
-// Helper method to check if a word position contains a search match
+  try {
+    if (user != null && widget.book != null) {
+      // Fix: Use JSON body + headers
+      final response = await http.delete(
+        Uri.parse('http://192.168.1.15:5001/api/notes'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "userId": user!.uid,
+          "bookId": widget.book!.bookId,
+          "sentenceIndex": sentenceIndex,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 404) {
+        widget.book!.notes.removeWhere((note) => note.sentenceIndex == sentenceIndex);
+      } else {
+        throw Exception("Failed to delete note from server: ${response.statusCode}");
+      }
+    } else {
+      // Delete temporary note
+      mynoteController.deleteNote(sentenceIndex);
+    }
+
+    setState(() {
+      notesMap.remove(sentenceIndex);
+    });
+
+    debugPrint('Note deleted successfully');
+  } catch (e) {
+    debugPrint('Error deleting note: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete note: ${e.toString()}')),
+      );
+    }
+  }
+}
+
+  // Helper method to check if a word position contains a search match
   bool _isInMatchRange(int sentenceIndex, int wordStartPos, int wordEndPos) {
     if (!searchController.isSearching.value ||
         searchController.searchTerm.value.isEmpty) {
@@ -141,12 +579,11 @@ class _TextDisplayState extends State<TextDisplay> {
 
     String searchTermLower = searchController.searchTerm.value.toLowerCase();
 
-    // Check if this word or part of it matches the search term
     return currentWord.contains(searchTermLower) ||
         searchTermLower.contains(currentWord);
   }
 
-// Helper method to check if a position is in the current match
+  // Helper method to check if a position is in the current match
   bool _isInCurrentMatch(int sentenceIndex, int wordStartPos, int wordEndPos) {
     if (searchController.matchIndexes.isEmpty) return false;
 
@@ -154,13 +591,11 @@ class _TextDisplayState extends State<TextDisplay> {
         searchController.matchIndexes[searchController.currentMatchIndex.value];
     if (currentMatch.sentenceIndex != sentenceIndex) return false;
 
-    // Check if there's any overlap between the word and current match
     return (wordStartPos <= currentMatch.endPos &&
         wordEndPos >= currentMatch.startPos);
   }
 
   Color _getWordColor(String word, int sentenceIndex, int wordPosition) {
-    // Track the position of this word
     int wordStartPos = wordPosition;
     int wordEndPos = wordPosition + word.length;
 
@@ -183,7 +618,6 @@ class _TextDisplayState extends State<TextDisplay> {
   }
 
   Color? _getWordBackground(String word, int sentenceIndex, int wordPosition) {
-    // Track the position of this word
     int wordStartPos = wordPosition;
     int wordEndPos = wordPosition + word.length;
 
@@ -204,42 +638,36 @@ class _TextDisplayState extends State<TextDisplay> {
     TextEditingController noteController = TextEditingController(
       text: initialValue?.isNotEmpty == true ? initialValue : '',
     );
-// Get the existing note's color if it exists
+    
     Color initialColor = notesMap[sentenceIndex]?.color ?? Colors.blue;
+    
     await showDialog(
       context: context,
       builder: (context) {
-        Color localSelectedColor = selectedColor;
+        Color localSelectedColor = initialColor;
 
         return StatefulBuilder(builder: (context, setDialogState) {
           return AlertDialog(
             icon: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.delete,
-                    color: Colors.grey[700],
-                    size: widget.screenWidth * 0.05,
+                if (notesMap.containsKey(sentenceIndex))
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete,
+                      color: Colors.grey[700],
+                      size: widget.screenWidth * 0.05,
+                    ),
+                    onPressed: () {
+                      _deleteNote(sentenceIndex);
+                      Get.back();
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      if (widget.book != null) {
-                        widget.book?.notes.removeWhere(
-                            (note) => note.sentenceIndex == sentenceIndex);
-                      } else {
-                        mynoteController.deleteNote(sentenceIndex);
-                      }
-                      notesMap.remove(sentenceIndex);
-                    });
-                    Get.back();
-                  },
-                ),
               ],
             ),
             backgroundColor: Colors.white,
             title: Text(
-              "Add a Note",
+              notesMap.containsKey(sentenceIndex) ? "Edit Note" : "Add a Note",
               style: TextStyle(fontSize: widget.screenWidth * 0.04),
             ),
             actionsPadding:
@@ -449,6 +877,7 @@ class _TextDisplayState extends State<TextDisplay> {
                   String sentence = widget.sentences[sentenceIndex];
                   List<String> words = sentence.split(' ');
                   bool isRTLText = isRTL(sentence);
+                  
                   return Padding(
                     padding: EdgeInsets.symmetric(
                         horizontal: widget.screenWidth * 0.0095,
@@ -475,11 +904,13 @@ class _TextDisplayState extends State<TextDisplay> {
                                 sentenceIndex: sentenceIndex,
                                 onSave: (noteText, pinColor) {
                                   final newNote = Note(
-                                    booktitle: widget.book?.booktitle ??
-                                        'Temporary Note',
+                                    userId: user?.uid ?? '', 
+                                    bookId: widget.book?.bookId.toString() ?? 'unknown',
+                                    booktitle: widget.book?.booktitle ?? 'Temporary Note',
                                     noteContent: noteText,
                                     color: pinColor,
                                     sentenceIndex: sentenceIndex,
+                                    isPinned: false, 
                                   );
                                   _saveNote(newNote);
                                 },
@@ -488,7 +919,6 @@ class _TextDisplayState extends State<TextDisplay> {
                           Flexible(
                             child: Obx(
                               () => RichText(
-                                // Add textDirection here
                                 textDirection: isRTLText
                                     ? TextDirection.rtl
                                     : TextDirection.ltr,
@@ -515,11 +945,14 @@ class _TextDisplayState extends State<TextDisplay> {
                                 sentenceIndex: sentenceIndex,
                                 onSave: (noteText, pinColor) {
                                   final newNote = Note(
+                                    userId: user?.uid ?? '', 
+                                    bookId: widget.book?.bookId.toString() ?? 'unknown',
                                     booktitle: widget.book?.booktitle ??
                                         'Temporary Note',
                                     noteContent: noteText,
                                     color: pinColor,
                                     sentenceIndex: sentenceIndex,
+                                    isPinned: false, 
                                   );
                                   _saveNote(newNote);
                                 },
@@ -545,17 +978,12 @@ class _TextDisplayState extends State<TextDisplay> {
   List<InlineSpan> _buildTextSpans(String sentence, int sentenceIndex) {
     List<InlineSpan> spans = [];
     List<String> words = sentence.split(' ');
-
-    // Keep track of character position within the sentence
     int currentPosition = 0;
 
     for (int i = 0; i < words.length; i++) {
       String word = words[i];
-
-      // Store the start position of this word
       int wordPosition = currentPosition;
 
-      // Add the word with appropriate styling
       spans.add(
         TextSpan(
           text: "$word",
@@ -570,10 +998,8 @@ class _TextDisplayState extends State<TextDisplay> {
               color: _getWordColor(word, sentenceIndex, wordPosition)),
           recognizer: TapGestureRecognizer()
             ..onTapDown = (details) async {
-              // Your existing tap handler code here
               final tapPosition = details.globalPosition;
               final selectedOption = await showMenu<String>(
-                // Your existing showMenu code
                 context: context,
                 position: RelativeRect.fromLTRB(
                   tapPosition.dx,
@@ -606,9 +1032,7 @@ class _TextDisplayState extends State<TextDisplay> {
                 ],
               );
 
-              // Your existing option handling code
               if (selectedOption == 'define') {
-                // Definition handling code
                 if (overlayController.isShowing) return;
                 overlayController.show(
                   context: context,
@@ -642,17 +1066,19 @@ class _TextDisplayState extends State<TextDisplay> {
                   onDismiss: () {},
                 );
               } else if (selectedOption == 'note') {
-                // Note handling code
                 _showNoteDialog(
                   initialValue: notesMap[sentenceIndex]?.noteContent,
                   context: context,
                   sentenceIndex: sentenceIndex,
                   onSave: (noteText, pinColor) {
                     final newNote = Note(
+                      userId: user?.uid ?? '', 
+                      bookId: widget.book?.bookId.toString() ?? 'unknown',
                       booktitle: widget.book?.booktitle ?? 'Temporary Note',
                       noteContent: noteText,
                       color: pinColor,
                       sentenceIndex: sentenceIndex,
+                      isPinned: false, 
                     );
                     _saveNote(newNote);
                   },
@@ -662,10 +1088,8 @@ class _TextDisplayState extends State<TextDisplay> {
         ),
       );
 
-      // Update position for the next word
       currentPosition += word.length;
 
-      // Add a space after each word (except the last one)
       if (i < words.length - 1) {
         spans.add(TextSpan(
           text: " ",
@@ -677,7 +1101,7 @@ class _TextDisplayState extends State<TextDisplay> {
             decoration: widget.selectedFontDecoration,
           ),
         ));
-        currentPosition += 1; // Account for the space
+        currentPosition += 1;
       }
     }
 
@@ -686,6 +1110,5 @@ class _TextDisplayState extends State<TextDisplay> {
 }
 
 bool isRTL(String text) {
-  // Check if text contains Arabic characters
   return RegExp(r'[\u0600-\u06FF]').hasMatch(text);
 }

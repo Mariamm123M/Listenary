@@ -4,12 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:listenary/services/permissions/camera_permission.dart';
 import 'package:listenary/services/permissions/storage_permisson.dart';
 import 'package:listenary/view/components/awesome_dialog.dart';
 import 'package:listenary/view/components/profile_image.dart';
+import 'package:listenary/view/pages/login.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../services/auth_service.dart';
@@ -152,6 +154,60 @@ class _ProfileState extends State<Profile> {
     });
   }
 
+  // Fixed logout method - UPDATED VERSION WITHOUT SUCCESS MESSAGE
+  Future<void> _performLogout() async {
+    try {
+      print('=== LOGOUT PROCESS STARTED ===');
+      
+      // Show loading dialog
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xff212E54)),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
+      // Sign out from Firebase
+      await FirebaseAuth.instance.signOut();
+      print('Firebase Auth signed out');
+
+      // Sign out from Google (if user signed in with Google)
+      try {
+        await GoogleSignIn().signOut();
+        print('Google Sign In signed out');
+      } catch (e) {
+        print('Google signout error (might be normal if not signed in with Google): $e');
+      }
+
+      // Close loading dialog
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+
+      // Navigate to login screen
+      Get.offAll(() => const Login());
+      print('Navigation to Login completed');
+
+    } catch (e) {
+      print('LOGOUT ERROR: $e');
+      
+      // Close loading dialog if open
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+      
+      Get.snackbar(
+        "Error",
+        "Failed to log out: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -166,7 +222,7 @@ class _ProfileState extends State<Profile> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProfileImage(
-              radius: 0.3,//0.18 difference
+              radius: 0.3, //0.18 difference
               screenWidth: screenWidth,
               imageFile: _imagePath, // Load saved image
               color: const Color(0xff949494),
@@ -243,15 +299,54 @@ class _ProfileState extends State<Profile> {
               icon: Icons.logout_sharp,
               text: "Log out".tr,
               onTap: () {
-                showDeleteDialog(
+                // Show confirmation dialog
+                showDialog(
                   context: context,
-                  screenHeight: screenHeight,
-                  screenWidth: screenWidth,
-                  okText: "Log Out".tr,
-                  title: "Logging Out".tr,
-                  desc: "Are you sure you want to Log Out from Listenary?".tr,
-                  onDelete: () {
-                    AuthService().signOut(context);
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(
+                        "Logging Out".tr,
+                        style: const TextStyle(
+                          color: Color(0xff212E54),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      content: Text(
+                        "Are you sure you want to Log Out from Listenary?".tr,
+                        style: const TextStyle(color: Color(0xff212E54)),
+                      ),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Get.back(); // Close dialog
+                          },
+                          child: Text(
+                            "Cancel".tr,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            Get.back(); // Close dialog first
+                            await _performLogout(); // Then perform logout
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff212E54),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            "Log Out".tr,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    );
                   },
                 );
               },

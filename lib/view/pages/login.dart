@@ -149,13 +149,17 @@ class _LoginState extends State<Login> {
                     // Sign In Button
                     ElevatedButton(
                       onPressed: () async {
-                        if (formKey.currentState!.validate()) {
-                          await _authService.signInWithEmail(
-                            emailController.text,
-                            passwordController.text,
-                            context,
-                          );
-                          Get.offAll(() => const BottomNavBarScreen());
+                      if (formKey.currentState!.validate()) {
+      // Check if sign-in was successful
+                       bool success = false;
+                        try {
+                         await _authService.signInWithEmail(emailController.text,passwordController.text,context,
+                           );
+                         success = true;
+                          } catch (e) {
+                           success = false;
+  // Handle error if needed
+                           }
                         }
                       },
                       child:  Text(

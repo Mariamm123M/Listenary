@@ -4,6 +4,10 @@ import 'package:get/get.dart';
 import 'package:listenary/controller/notesController.dart';
 import 'package:listenary/model/book_model.dart';
 import 'package:listenary/model/noteModel.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class NotesDialog extends StatefulWidget {
   final double screenWidth;

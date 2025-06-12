@@ -78,7 +78,16 @@ Book book = Book(
     "history".tr
   ];
   String? selectedCategory;
+void getCurrentUserId() {
+  User? user = FirebaseAuth.instance.currentUser;
 
+  if (user != null) {
+    String uid = user.uid;
+    print("User ID: $uid");
+  } else {
+    print("No user is currently signed in.");
+  }
+}
   Future<void> fetchBooks() async {
     try {
       final response = await http.get(
@@ -108,6 +117,8 @@ Book book = Book(
     _getUserName();
     _loadProfileImage();
     fetchBooks();
+    getCurrentUserId() ;
+
   }
 
   void _getUserName() {
