@@ -14,8 +14,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listenary/view/components/animation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
-
 class UserSettings {
   final String language; // "English" or "Arabic"
   final bool notificationsEnabled;
@@ -154,19 +152,14 @@ class _SettingsState extends State<Settings> {
   }
 
   List<Map<String, String>> speakers = [
-    {
-      "profile": "assets/Images/male.jpg",
-      "name": "mark",
-      "gender":"male"
-    },
+    {"profile": "assets/Images/male.jpg", "name": "mark", "gender": "male"},
     {
       "profile": "assets/Images/female.jpeg",
-      "name": "Leila",
+      "name": "leila",
       "gender": "female"
     }
   ];
   String selectedLanguage = "English";
-
 
   @override
   void initState() {
@@ -179,6 +172,7 @@ class _SettingsState extends State<Settings> {
     _getUserData();
     _loadProfileImage();
   }
+
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? lang = prefs.getString('language') ?? 'en';
@@ -186,6 +180,7 @@ class _SettingsState extends State<Settings> {
       selectedLanguage = lang == 'en' ? 'English' : 'Arabic';
     });
   }
+
   void _getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     setState(() {
@@ -238,7 +233,7 @@ class _SettingsState extends State<Settings> {
                       color: Colors.white, size: screenWidth * 0.1),
                   SizedBox(width: screenWidth * 0.03),
                   Text(
-                    "Settings",
+                    "settings".tr,
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: screenWidth * 0.055,
@@ -295,17 +290,22 @@ class _SettingsState extends State<Settings> {
                       screenWidth: screenWidth,
                       context,
                       image: "assets/Icons/Accessibilty.svg",
-                      text: "Accessibility Features",
+                      text: "accessibility_features".tr,
                       children: [
                         feature(context,
                             fontSize: 0.037,
                             screenWidth: screenWidth,
-                            text: "Custom Voice Profiles",
-                            children: [Speakers(speakers: speakers)]),
+                            text: "custom_voice_profiles".tr,
+                            children: [
+                              Speakers(
+                                speakers: speakers,
+                                ttsText: 'hello_name_excited'.tr,
+                              )
+                            ]),
                         feature(context,
                             fontSize: 0.037,
                             screenWidth: screenWidth,
-                            text: "Language",
+                            text: "language".tr,
                             icon: Icons.translate,
                             children: [
                               Row(
@@ -317,6 +317,7 @@ class _SettingsState extends State<Settings> {
                                       screenWidth: screenWidth,
                                       selectedCategory: selectedLanguage,
                                       category: "English",
+                                      displayText: "english".tr,
                                       onSelect: (category) async {
                                         //change to Engish theme
                                         setState(() {
@@ -324,7 +325,9 @@ class _SettingsState extends State<Settings> {
                                         });
                                         Get.updateLocale(const Locale('en'));
 
-                                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                                        SharedPreferences prefs =
+                                            await SharedPreferences
+                                                .getInstance();
                                         prefs.setString('language', 'en');
 
                                         saveUserSettings();
@@ -333,6 +336,7 @@ class _SettingsState extends State<Settings> {
                                       screenHeight: screenHeight,
                                       screenWidth: screenWidth,
                                       category: "Arabic",
+                                      displayText: "arabic".tr,
                                       selectedCategory: selectedLanguage,
                                       onSelect: (category) async {
                                         //change to Arabic theme
@@ -341,11 +345,15 @@ class _SettingsState extends State<Settings> {
                                         });
                                         Get.updateLocale(const Locale('ar'));
 
-                                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                                        SharedPreferences prefs =
+                                            await SharedPreferences
+                                                .getInstance();
                                         prefs.setString('language', 'ar');
-                                        print('Language saved as: ${prefs.getString('language')}');
+                                        print(
+                                            'Language saved as: ${prefs.getString('language')}');
 
-                                        saveUserSettings();                                    })
+                                        saveUserSettings();
+                                      })
                                 ],
                               )
                             ])
@@ -354,7 +362,7 @@ class _SettingsState extends State<Settings> {
                     feature(context,
                         fontSize: 0.045,
                         screenWidth: screenWidth,
-                        text: "Notifications",
+                        text: "notifications".tr,
                         image: "assets/Icons/Notification.svg",
                         children: [
                           Row(
@@ -366,6 +374,7 @@ class _SettingsState extends State<Settings> {
                                   selectedCategory:
                                       notificationsEnabled ? "On" : "Off",
                                   category: "On",
+                                  displayText: "on".tr,
                                   onSelect: (category) {
                                     //save the value of the notification to on
                                     setState(() {
@@ -377,6 +386,7 @@ class _SettingsState extends State<Settings> {
                                   screenHeight: screenHeight,
                                   screenWidth: screenWidth,
                                   category: "Off",
+                                  displayText: "off".tr,
                                   selectedCategory:
                                       notificationsEnabled ? "On" : "Off",
                                   onSelect: (category) {
@@ -440,6 +450,7 @@ class _SettingsState extends State<Settings> {
     required String category,
     required String selectedCategory,
     required Function(String) onSelect,
+    required String displayText,
   }) {
     return GestureDetector(
       onTap: () {
@@ -464,7 +475,7 @@ class _SettingsState extends State<Settings> {
                   )),
           SizedBox(width: screenWidth * 0.025),
           Text(
-            category,
+            displayText,
             style: TextStyle(
               fontSize: screenWidth * 0.025,
               color: selectedCategory == category
@@ -481,8 +492,8 @@ class _SettingsState extends State<Settings> {
 
 class Speakers extends StatefulWidget {
   final List<Map<String, String>> speakers;
-
-  const Speakers({super.key, required this.speakers});
+  final String ttsText;
+  const Speakers({super.key, required this.speakers, required this.ttsText});
 
   @override
   State<Speakers> createState() => _SpeakersState();
@@ -495,15 +506,14 @@ class _SpeakersState extends State<Speakers> {
   final AudioPlayer player = AudioPlayer();
   bool isLoading = false;
   final Map<int, String> _voiceFilePaths = {};
- List<Color> colors = [
+  List<Color> colors = [
     Color(0xff5356FF),
     Color(0xff3572EF),
     Color(0xff3ABEF9),
     Color(0xffA7E6FF)
   ];
-    List<int> duration = [900, 700, 600, 800, 500];
-
-
+  List<int> duration = [900, 700, 600, 800, 500];
+  String? _lastTtsText; // Track last used text to detect changes
 
   @override
   void initState() {
@@ -512,19 +522,21 @@ class _SpeakersState extends State<Speakers> {
       if (state == PlayerState.completed) {
         setState(() {
           isPlaying = false;
+          playedVoice = null;
         });
       }
     });
-    // Initialize voice file paths
-    _initVoiceFiles();
+    _lastTtsText = widget.ttsText;
+    // No need to pre-generate files since we generate on play
   }
 
-  Future<void> _initVoiceFiles() async {
-    for (int i = 0; i < widget.speakers.length; i++) {
-      final filePath = await _getVoiceFilePath(i);
-      if (filePath != null) {
-        _voiceFilePaths[i] = filePath;
-      }
+  void didUpdateWidget(Speakers oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.ttsText != widget.ttsText) {
+      setState(() {
+        _voiceFilePaths.clear(); // Clear cache when text changes
+        _lastTtsText = widget.ttsText;
+      });
     }
   }
 
@@ -536,13 +548,8 @@ class _SpeakersState extends State<Speakers> {
 
   Future<String?> _getVoiceFilePath(int index) async {
     final dir = await getTemporaryDirectory();
-    final filePath = '${dir.path}/speak_$index.mp3';
-    final file = File(filePath);
-
-    if (await file.exists()) {
-      return filePath;
-    }
-    return null;
+    final filePath = '${dir.path}/speaker_$index.mp3';
+    return filePath;
   }
 
   Future<void> _fetchAndSaveVoice(int index) async {
@@ -552,29 +559,43 @@ class _SpeakersState extends State<Speakers> {
 
     try {
       final speaker = widget.speakers[index];
-      final gender = speaker["gender"] ?? "male";
+      final gender = speaker["gender"]?.toLowerCase() ?? "male";
       final name = speaker["name"] ?? "Speaker";
 
       final response = await http.post(
-        Uri.parse('http://192.168.1.7:5002/tts'),
+        Uri.parse('http://192.168.1.4:5002/tts'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'text': 'Hello, this is $name and I am excited to help you in your journey',
+          'text': widget.ttsText,
           'gender': gender,
+          'speaker_name': name,
         }),
       );
 
       if (response.statusCode == 200) {
         final dir = await getTemporaryDirectory();
-        final filePath = '${dir.path}/speak_$index.mp3';
+        final filePath = '${dir.path}/speaker_$index.mp3';
         final file = File(filePath);
-
+        if (await file.exists()) {
+          await file.delete(); // Delete old file to ensure fresh audio
+        }
         await file.writeAsBytes(response.bodyBytes);
-        _voiceFilePaths[index] = filePath;
+        setState(() {
+          _voiceFilePaths[index] = filePath;
+        });
       } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Failed to fetch voice for ${speaker["name"]}: ${response.statusCode}'),
+          ),
+        );
         print('Failed to fetch TTS audio: ${response.statusCode}');
       }
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating voice: $e')),
+      );
       print('Error in TTS playback: $e');
     } finally {
       setState(() {
@@ -586,17 +607,26 @@ class _SpeakersState extends State<Speakers> {
   Future<void> _playVoice(int index) async {
     await player.stop();
 
-    // Check if voice file exists
-    if (!_voiceFilePaths.containsKey(index)) {
-      await _fetchAndSaveVoice(index);
-    }
+    // Always fetch new audio, ignoring existing files
+    await _fetchAndSaveVoice(index);
 
     if (_voiceFilePaths[index] != null) {
-      await player.play(DeviceFileSource(_voiceFilePaths[index]!));
-      setState(() {
-        playedVoice = index;
-        isPlaying = true;
-      });
+      try {
+        await player.play(DeviceFileSource(_voiceFilePaths[index]!));
+        setState(() {
+          playedVoice = index;
+          isPlaying = true;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing voice: $e')),
+        );
+        print('Error playing audio: $e');
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No voice file available for this speaker')),
+      );
     }
   }
 
@@ -609,6 +639,9 @@ class _SpeakersState extends State<Speakers> {
         "selectedSpeaker": selectedVoice,
       });
     } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving speaker: $error')),
+      );
       print("Error saving speaker: $error");
     }
   }
@@ -665,7 +698,7 @@ class _SpeakersState extends State<Speakers> {
                         ),
                         SizedBox(width: screenWidth * 0.035),
                         Text(
-                          widget.speakers[index]["name"]!,
+                          widget.speakers[index]["name"]!.tr,
                           style: TextStyle(
                             color: selectedSpeaker == index
                                 ? const Color(0xff212E54)
@@ -676,40 +709,42 @@ class _SpeakersState extends State<Speakers> {
                         ),
                       ],
                     ),
-              playedVoice == index && isPlaying?
-                    Container(
-                      width: 50,
-                      height: 25,
-                      child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: List.generate(
-                                    4,
-                                    (index) => VisualComponent(
+                    playedVoice == index && isPlaying
+                        ? Container(
+                            width: 50,
+                            height: 25,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: List.generate(
+                                  4,
+                                  (index) => VisualComponent(
                                       width: 5,
-                                        duration: duration[index % 4],
-                                        color: colors[index % 4])),
-                              ),
-                    ):
-                    Image.asset("assets/Icons/voice.png"),
-                    IconButton(
-                      onPressed: () async {
-                        if (playedVoice == index && isPlaying) {
-                          await player.pause();
-                          setState(() {
-                            isPlaying = false;
-                          });
-                        } else {
-                          await _playVoice(index);
-                        }
-                      },
-                      icon:  Icon(
+                                      duration: duration[index % 4],
+                                      color: colors[index % 4])),
+                            ),
+                          )
+                        : Image.asset("assets/Icons/voice.png"),
+                    playedVoice == index && isLoading 
+                        ? CircularProgressIndicator()
+                        : IconButton(
+                            onPressed: () async {
+                              if (playedVoice == index && isPlaying) {
+                                await player.pause();
+                                setState(() {
+                                  isPlaying = false;
+                                });
+                              } else {
+                                await _playVoice(index);
+                              }
+                            },
+                            icon: Icon(
                               playedVoice == index && isPlaying
                                   ? Icons.pause
                                   : Icons.play_arrow,
                               size: screenWidth * 0.08,
                               color: const Color(0xff212E54),
                             ),
-                    ),
+                          ),
                   ],
                 ),
               ),

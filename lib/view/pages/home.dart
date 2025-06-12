@@ -8,6 +8,7 @@ import 'package:listenary/model/book_model.dart';
 import 'package:listenary/view/components/chracters_dialog.dart';
 import 'package:listenary/view/components/library_card.dart';
 import 'package:listenary/view/components/recently_card.dart';
+import 'package:listenary/view/pages/SearchPage.dart';
 import 'package:listenary/view/pages/chatBot.dart';
 import 'package:listenary/view/pages/profile.dart';
 import 'dart:io';
@@ -29,42 +30,36 @@ class _HomeState extends State<Home> {
 
   List<Book> libraryBooks = [];
   bool isLoading = true;
-Book book = Book(
-  bookId: 2,
-  booktitle: "Humans: A Deep Dive into Human Nature",
-  author: "Nour Abdullah",
-  bookimageURL: "https://example.com/images/human_nature.jpg",
-  rating: 4.8,
-  pages: 512,
-  language: "English",
-  description:
-      "This comprehensive book takes a profound journey into the emotional, psychological, and philosophical makeup of what it means to be human. "
-      "It explores how identity is formed, how emotions shape our experiences, and how society influences our behavior. "
-      "Each chapter is carefully structured to unpack complex human experiences in a relatable and thought-provoking manner.",
-  bookcontent:
-      "Chapter 1: The Roots of Identity\n"
-      "From the moment we are born, we begin to form a sense of who we are. Our identity is not static—it evolves with every experience and interaction. "
-      "This chapter examines how culture, upbringing, trauma, and environment contribute to our understanding of self.\n\n"
-      
-      "Chapter 2: Emotional Intelligence\n"
-      "Understanding and managing emotions is critical to our relationships and personal growth. This chapter delves into the science of emotional regulation, "
-      "empathy, and the connection between emotional health and decision-making.\n\n"
-      
-      "Chapter 3: The Human Condition\n"
-      "To be human is to struggle, to question, to hope. This chapter reflects on the philosophical inquiries that have followed humanity for centuries—"
-      "from the search for purpose to the inevitability of mortality.\n\n"
-      
-      "Chapter 4: Social Mirrors\n"
-      "We are shaped by the people around us. This chapter explores social dynamics, peer pressure, community belonging, and how feedback from others can enhance or distort self-perception.\n\n"
-      
-      "Chapter 5: Beyond the Self\n"
-      "Can we rise above ego and personal gain? This final chapter challenges the reader to think of humanity as a collective and asks: what does it mean to live for others as much as for ourselves?\n\n"
-      
-      "Conclusion:\n"
-      "Understanding human nature is a lifelong journey, one that invites curiosity, compassion, and courage. This book is only the beginning of that path.",
-  audioFilePath: "https://example.com/audio/deep_dive_humans.mp3",
-  category: "Psychology & Philosophy",
-);
+  Book book = Book(
+    bookId: 2,
+    booktitle: "Humans: A Deep Dive into Human Nature",
+    author: "Nour Abdullah",
+    bookimageURL: "https://example.com/images/human_nature.jpg",
+    rating: 4.8,
+    pages: 512,
+    language: "English",
+    description:
+        "This comprehensive book takes a profound journey into the emotional, psychological, and philosophical makeup of what it means to be human. "
+        "It explores how identity is formed, how emotions shape our experiences, and how society influences our behavior. "
+        "Each chapter is carefully structured to unpack complex human experiences in a relatable and thought-provoking manner.",
+    bookcontent: "Chapter 1: The Roots of Identity\n"
+        "From the moment we are born, we begin to form a sense of who we are. Our identity is not static—it evolves with every experience and interaction. "
+        "This chapter examines how culture, upbringing, trauma, and environment contribute to our understanding of self.\n\n"
+        "Chapter 2: Emotional Intelligence\n"
+        "Understanding and managing emotions is critical to our relationships and personal growth. This chapter delves into the science of emotional regulation, "
+        "empathy, and the connection between emotional health and decision-making.\n\n"
+        "Chapter 3: The Human Condition\n"
+        "To be human is to struggle, to question, to hope. This chapter reflects on the philosophical inquiries that have followed humanity for centuries—"
+        "from the search for purpose to the inevitability of mortality.\n\n"
+        "Chapter 4: Social Mirrors\n"
+        "We are shaped by the people around us. This chapter explores social dynamics, peer pressure, community belonging, and how feedback from others can enhance or distort self-perception.\n\n"
+        "Chapter 5: Beyond the Self\n"
+        "Can we rise above ego and personal gain? This final chapter challenges the reader to think of humanity as a collective and asks: what does it mean to live for others as much as for ourselves?\n\n"
+        "Conclusion:\n"
+        "Understanding human nature is a lifelong journey, one that invites curiosity, compassion, and courage. This book is only the beginning of that path.",
+    audioFilePath: "https://example.com/audio/deep_dive_humans.mp3",
+    category: "Psychology & Philosophy",
+  );
 
   List<String> categories = [
     "drama".tr,
@@ -78,16 +73,17 @@ Book book = Book(
     "history".tr
   ];
   String? selectedCategory;
-void getCurrentUserId() {
-  User? user = FirebaseAuth.instance.currentUser;
+  void getCurrentUserId() {
+    User? user = FirebaseAuth.instance.currentUser;
 
-  if (user != null) {
-    String uid = user.uid;
-    print("User ID: $uid");
-  } else {
-    print("No user is currently signed in.");
+    if (user != null) {
+      String uid = user.uid;
+      print("User ID: $uid");
+    } else {
+      print("No user is currently signed in.");
+    }
   }
-}
+
   Future<void> fetchBooks() async {
     try {
       final response = await http.get(
@@ -96,9 +92,8 @@ void getCurrentUserId() {
       if (response.statusCode == 200) {
         List data = jsonDecode(response.body);
         setState(() {
-          libraryBooks = data
-              .map((bookJson) => Book.fromJson(bookJson))
-              .toList();
+          libraryBooks =
+              data.map((bookJson) => Book.fromJson(bookJson)).toList();
           isLoading = false;
         });
       } else {
@@ -117,8 +112,7 @@ void getCurrentUserId() {
     _getUserName();
     _loadProfileImage();
     fetchBooks();
-    getCurrentUserId() ;
-
+    getCurrentUserId();
   }
 
   void _getUserName() {
@@ -137,8 +131,8 @@ void getCurrentUserId() {
 
     List<FileSystemEntity> files = userDir.listSync();
     if (files.isNotEmpty) {
-      files.sort((a, b) =>
-          b.statSync().modified.compareTo(a.statSync().modified));
+      files.sort(
+          (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
       setState(() {
         _imagePath = files.first.path;
       });
@@ -214,7 +208,7 @@ void getCurrentUserId() {
                                   searchBar(screenWidth, screenHeight),
                                   SizedBox(height: screenWidth * 0.05),
                                   Text(
-                                      "no_recent_books".tr,
+                                    "no_recent_books".tr,
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: screenWidth * 0.032,
@@ -287,7 +281,7 @@ void getCurrentUserId() {
                     height: 5,
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       Get.to(() => ChatBotPage());
                     },
                     child: Row(
@@ -354,8 +348,7 @@ void getCurrentUserId() {
                     ),
                   );
                 },
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: 1),
+                separatorBuilder: (context, index) => const SizedBox(width: 1),
               ),
             ),
           ),
@@ -394,13 +387,7 @@ void getCurrentUserId() {
   Widget searchBar(double screenWidth, double screenHeight) {
     return GestureDetector(
       onTap: () {
-      Get.dialog(
-                        Dialog(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          child: CharctersDialog(book: book),
-                        ),);
-       /* Get.to(() => SearchPage());*/
+        Get.to(() => SearchPage());
       },
       child: Container(
         decoration: BoxDecoration(
@@ -410,15 +397,14 @@ void getCurrentUserId() {
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.02,
-              vertical: screenHeight * 0.012),
+              horizontal: screenWidth * 0.02, vertical: screenHeight * 0.012),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               const Icon(Icons.search, color: Color(0xff212E54)),
               const SizedBox(width: 8),
               Text(
-                  "search".tr,
+                "search".tr,
                 style: TextStyle(
                   color: const Color(0xff212E54),
                   fontSize: screenWidth * 0.032,

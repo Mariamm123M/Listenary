@@ -55,7 +55,7 @@ class UploadLink extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide(width: 1, color: Color(0xff949494)),
                     ),
-                  ),
+                  ),),
                   SizedBox(height: 10),
                   Row(
                     children: [
