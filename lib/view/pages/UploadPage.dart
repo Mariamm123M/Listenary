@@ -31,23 +31,20 @@ class UploadPage extends StatelessWidget {
           Get.to(() => ReadingPage(documnetText: extractedText));
         } else {
           print('OCR failed: ${response.statusCode}');
-          Get.snackbar("Error", "Failed to extract text.");
+          Get.snackbar("error".tr, "failed_to_extract_text".tr);
         }
       } catch (e) {
         print('Error uploading file: $e');
-        Get.snackbar("Error", "Could not connect to server.");
+        Get.snackbar("error".tr, "could_not_connect_to_server".tr);
       }
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    // Get the screen size for responsive design
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Scaling factor based on screen size
     double scaleWidth(double size) => size * screenWidth / 375;
     double scaleHeight(double size) => size * screenHeight / 812;
 
@@ -69,11 +66,11 @@ class UploadPage extends StatelessWidget {
                   SvgPicture.asset('assets/Icons/small_cloud.svg'),
                   SizedBox(width: scaleWidth(8)),
                   Text(
-                    "Choose an option",
+                    "choose_an_option".tr,
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w800,
-                      fontSize: scaleWidth(19), // Scalable font size
+                      fontSize: scaleWidth(19),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -84,7 +81,7 @@ class UploadPage extends StatelessWidget {
                 context,
                 scaleWidth,
                 scaleHeight,
-                "Upload files",
+                "upload_files".tr,
                 'assets/Icons/Pdf.svg',
                 () => Get.to(() => UploadFile()),
               ),
@@ -93,7 +90,7 @@ class UploadPage extends StatelessWidget {
                 context,
                 scaleWidth,
                 scaleHeight,
-                "Upload images",
+                "upload_images".tr,
                 'assets/Icons/upload2.svg',
                 () => Get.to(() => UploadImage()),
               ),
@@ -102,7 +99,7 @@ class UploadPage extends StatelessWidget {
                 context,
                 scaleWidth,
                 scaleHeight,
-                "Type or paste text",
+                "type_or_paste_text".tr,
                 'assets/Icons/text.svg',
                 () => Get.to(() => UploadText()),
               ),
@@ -118,11 +115,10 @@ class UploadPage extends StatelessWidget {
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text("Alert⚠️", textAlign: TextAlign.center),
+                              Text("alert".tr, textAlign: TextAlign.center),
                             ],
                           ),
-                          content: const Text(
-                              "Please ensure that the image and its elements are clear before taking the picture"),
+                          content: Text("please_ensure_image_elements_clear".tr),
                           actions: <Widget>[
                             TextButton(
                               onPressed: () async {
@@ -133,7 +129,7 @@ class UploadPage extends StatelessWidget {
                                     ? _openCamera(context)
                                     : Get.back();
                               },
-                              child: const Text("Ok"),
+                              child: Text("ok".tr),
                             ),
                           ],
                         );
@@ -158,9 +154,9 @@ class UploadPage extends StatelessWidget {
                         SvgPicture.asset('assets/Icons/scan.svg'),
                         SizedBox(height: scaleHeight(3)),
                         Text(
-                          "Scan",
+                          "scan".tr,
                           style: TextStyle(
-                            fontSize: scaleWidth(10), // Scalable font size
+                            fontSize: scaleWidth(10),
                             fontWeight: FontWeight.w600,
                             color: Colors.black,
                           ),
@@ -176,7 +172,7 @@ class UploadPage extends StatelessWidget {
                 context,
                 scaleWidth,
                 scaleHeight,
-                "Type or paste link",
+                "type_or_paste_link".tr,
                 'assets/Icons/link.svg',
                 () => Get.to(() => UploadLink()),
               ),
@@ -215,7 +211,7 @@ class UploadPage extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: scaleWidth(10), // Scalable font size
+                  fontSize: scaleWidth(10),
                   fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),

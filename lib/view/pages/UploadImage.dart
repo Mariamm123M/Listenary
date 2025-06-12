@@ -7,7 +7,6 @@ import 'package:listenary/services/permissions/storage_permisson.dart';
 import 'package:http/http.dart' as http;
 import 'ReadingPage.dart';
 
-
 class UploadImage extends StatefulWidget {
   const UploadImage({Key? key}) : super(key: key);
 
@@ -40,11 +39,11 @@ class _UploadImageState extends State<UploadImage> {
           Get.to(() => ReadingPage(documnetText: extractedText));
         } else {
           print('OCR failed: ${response.statusCode}');
-          Get.snackbar("Error", "Failed to extract text.");
+          Get.snackbar("error".tr, "failed_to_extract_text".tr);
         }
       } catch (e) {
         print('Error uploading file: $e');
-        Get.snackbar("Error", "Could not connect to server.");
+        Get.snackbar("error".tr, "could_not_connect_to_server".tr);
       }
     }
   }
@@ -101,7 +100,7 @@ class _UploadImageState extends State<UploadImage> {
                         child: Align(
                           alignment: Alignment.center,
                           child: Image.file(
-                            _image!, // Display the picked image
+                            _image!,
                             width: 150,
                             height: 150,
                           ),
@@ -126,7 +125,7 @@ class _UploadImageState extends State<UploadImage> {
                         child: Opacity(
                           opacity: 1,
                           child: Text(
-                            'Drag and drop to upload',
+                            'drag_and_drop_to_upload'.tr,
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: screenWidth * 0.045,
@@ -171,7 +170,7 @@ class _UploadImageState extends State<UploadImage> {
                                               height: 20,
                                             ),
                                             title: Text(
-                                              "Select Image from gallery",
+                                              "select_image_from_gallery".tr,
                                               style: TextStyle(
                                                 fontSize: screenWidth * 0.035,
                                                 color: Colors.white,
@@ -198,7 +197,7 @@ class _UploadImageState extends State<UploadImage> {
                               padding:
                               const EdgeInsets.symmetric(horizontal: 10.0),
                               child: Text(
-                                'Upload',
+                                'upload'.tr,
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 15,
